@@ -1,0 +1,46 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1><mat-icon>receipt_long</mat-icon> Mis Comisiones</h1>
+    <button mat-icon-button (click)="cargarPagos()" matTooltip="Actualizar">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <mat-card class="total-card" *ngIf="!cargando">
+    <mat-card-content>
+      <div class="total-row">
+        <mat-icon>payments</mat-icon>
+        <div>
+          <p class="total-label">Total recibido</p>
+          <p class="total-valor">{{ totalRecibido | copCurrency }}</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Historial de pagos recibidos</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="cargando" class="loading-container">
+        <mat-spinner diameter="36"></mat-spinner>
+      </div>
+
+      <mat-list *ngIf="!cargando && pagos.length > 0">
+        <mat-list-item *ngFor="let pago of pagos" class="pago-item">
+          <mat-icon matListItemIcon color="primary">payments</mat-icon>
+          <div matListItemTitle class="pago-monto">{{ pago.amount | copCurrency }}</div>
+          <div matListItemLine class="pago-fecha">
+            {{ pago.date | date:'dd/MM/yyyy' }}
+            <span *ngIf="pago.paymentReference"> — Ref: {{ pago.paymentReference }}</span>
+          </div>
+        </mat-list-item>
+      </mat-list>
+
+      <p *ngIf="!cargando && pagos.length === 0" class="empty-state">
+        No has recibido pagos de comisión aún
+      </p>
+    </mat-card-content>
+  </mat-card>
+</div>

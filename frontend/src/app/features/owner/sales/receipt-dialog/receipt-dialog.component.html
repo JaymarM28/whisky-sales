@@ -1,0 +1,10 @@
+<h2 mat-dialog-title>
+  <mat-icon>receipt_long</mat-icon>
+  Comprobante de venta
+</h2>
+<mat-dialog-content>
+  <img [src]="data.imageUrl" alt="Comprobante" class="receipt-img" />
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cerrar()">Cerrar</button>
+</mat-dialog-actions>

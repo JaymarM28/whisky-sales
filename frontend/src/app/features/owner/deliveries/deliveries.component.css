@@ -1,0 +1,16 @@
+.page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filtros-card {
+  margin-bottom: 16px;
+}
+
+.filtros {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,44 @@
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+mat-form-field {
+  margin-bottom: 8px;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(0,0,0,.54);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin: 8px 0 4px;
+}
+
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.costo-calculado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #166534;
+}
+
+.costo-calculado mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+

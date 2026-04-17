@@ -1,0 +1,166 @@
+/* ── Layout split ─────────────────────────────────── */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── Panel izquierdo: branding ─────────────────────── */
+.brand-panel {
+  flex: 1;
+  background: #1A1208;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-panel::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,150,58,.18) 0%, transparent 65%);
+  top: -80px;
+  right: -100px;
+  pointer-events: none;
+}
+
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,150,58,.1) 0%, transparent 65%);
+  bottom: -60px;
+  left: -80px;
+  pointer-events: none;
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.brand-icon {
+  font-size: 72px;
+  width: 72px;
+  height: 72px;
+  color: #C9963A;
+  display: block;
+  margin: 0 auto 20px;
+  filter: drop-shadow(0 0 24px rgba(201,150,58,.5));
+}
+
+.brand-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #E8C97A;
+  margin: 0 0 12px;
+  letter-spacing: .5px;
+}
+
+.brand-sub {
+  font-size: 15px;
+  color: rgba(232,201,122,.5);
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+/* ── Panel derecho: formulario ─────────────────────── */
+.form-panel {
+  width: 420px;
+  min-width: 420px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+}
+
+.form-wrapper {
+  width: 100%;
+}
+
+/* Logo móvil (oculto en desktop) */
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.mobile-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #C9963A;
+}
+
+.mobile-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1208;
+}
+
+.form-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1208;
+  margin: 0 0 24px;
+}
+
+/* ── Campos ────────────────────────────────────────── */
+.field {
+  width: 100%;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.btn-submit {
+  width: 100%;
+  margin-top: 12px;
+  height: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  background: #C9963A !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+.btn-submit:disabled {
+  opacity: 0.65;
+}
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width: 767px) {
+  .login-page {
+    flex-direction: column;
+  }
+
+  .brand-panel {
+    display: none;
+  }
+
+  .form-panel {
+    width: 100%;
+    min-width: unset;
+    padding: 32px 24px 48px;
+    align-items: flex-start;
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  .form-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+}

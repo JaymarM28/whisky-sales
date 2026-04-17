@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>
+  <mat-icon>person_add</mat-icon> Nuevo owner
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Negocio</mat-label>
+      <mat-select formControlName="tenantId">
+        <mat-option *ngFor="let t of data.tenants" [value]="t.id">
+          {{ t.name }} <span style="color: rgba(0,0,0,.4); font-size:12px">({{ t.slug }})</span>
+        </mat-option>
+      </mat-select>
+      <mat-error>Selecciona un negocio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre completo</mat-label>
+      <input matInput formControlName="name" />
+      <mat-error>Obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Cédula</mat-label>
+      <input matInput formControlName="cedula" inputmode="numeric" />
+      <mat-error>Obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>PIN inicial</mat-label>
+      <input matInput type="password" formControlName="pin" inputmode="numeric" maxlength="6" />
+      <mat-error *ngIf="form.get('pin')?.hasError('required')">Obligatorio</mat-error>
+      <mat-error *ngIf="form.get('pin')?.hasError('minlength')">Mínimo 4 dígitos</mat-error>
+    </mat-form-field>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid || guardando">
+    {{ guardando ? 'Creando...' : 'Crear owner' }}
+  </button>
+</mat-dialog-actions>

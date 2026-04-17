@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>
+  <mat-icon>lock</mat-icon>
+  Ingresa tu PIN
+</h2>
+<mat-dialog-content>
+  <p class="usuario-nombre">{{ data.usuario.name }}</p>
+  <form [formGroup]="form" (ngSubmit)="ingresar()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>PIN</mat-label>
+      <input
+        matInput
+        formControlName="pin"
+        [type]="ocultarPin ? 'password' : 'text'"
+        inputmode="numeric"
+        maxlength="6"
+        autofocus
+      />
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="ocultarPin = !ocultarPin"
+      >
+        <mat-icon>{{ ocultarPin ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="form.get('pin')?.hasError('required')">
+        El PIN es obligatorio
+      </mat-error>
+      <mat-error *ngIf="form.get('pin')?.hasError('minlength')">
+        El PIN debe tener al menos 4 dígitos
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="ingresar()"
+    [disabled]="form.invalid"
+  >
+    Ingresar
+  </button>
+</mat-dialog-actions>

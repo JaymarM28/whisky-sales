@@ -1,0 +1,80 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ esEdicion ? 'edit' : 'add_box' }}</mat-icon>
+  {{ esEdicion ? 'Editar producto' : 'Nuevo producto' }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+      <mat-error>El nombre es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Referencia</mat-label>
+      <input matInput formControlName="reference" />
+      <mat-error>La referencia es obligatoria</mat-error>
+    </mat-form-field>
+
+    <!-- Sección de caja (opcional) -->
+    <p class="section-label">Compra por caja (opcional)</p>
+    <div class="row-2">
+      <mat-form-field appearance="outline">
+        <mat-label>Costo de la caja</mat-label>
+        <input matInput type="number" formControlName="boxCost" min="1" />
+        <mat-icon matPrefix>inventory</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Botellas por caja</mat-label>
+        <input matInput type="number" formControlName="unitsPerBox" min="1" />
+        <mat-icon matPrefix>liquor</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Costo unitario calculado -->
+    <div *ngIf="usandoCaja" class="costo-calculado">
+      <mat-icon>calculate</mat-icon>
+      <span>Costo por botella: <strong>{{ costoPorBotella | currency:'COP':'symbol':'1.0-0' }}</strong></span>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Precio de costo por botella (COP)</mat-label>
+      <input matInput type="number" formControlName="costPrice" min="1" [readonly]="usandoCaja" />
+      <mat-icon matPrefix>lock</mat-icon>
+      <mat-hint *ngIf="usandoCaja">Calculado automáticamente desde la caja</mat-hint>
+      <mat-hint *ngIf="!usandoCaja">Solo visible para ti — no se comparte con socios</mat-hint>
+      <mat-error>El precio de costo es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Precio de referencia para socios (COP)</mat-label>
+      <input matInput type="number" formControlName="partnerPrice" min="1" />
+      <mat-icon matPrefix>people</mat-icon>
+      <mat-hint>El costo que verán los socios para calcular su comisión</mat-hint>
+      <mat-error>El precio de referencia es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Precio de venta por botella (COP)</mat-label>
+      <input matInput type="number" formControlName="salePrice" min="1" />
+      <mat-icon matPrefix>storefront</mat-icon>
+      <mat-error>El precio de venta es obligatorio</mat-error>
+    </mat-form-field>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="guardar()"
+    [disabled]="form.invalid || guardando"
+  >
+    {{ guardando ? 'Guardando...' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

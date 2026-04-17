@@ -1,0 +1,64 @@
+<h2 mat-dialog-title>
+  <mat-icon>payments</mat-icon>
+  Registrar pago de comisión
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Socio</mat-label>
+      <mat-select formControlName="partnerId">
+        <mat-option *ngFor="let socio of data.socios" [value]="socio.id">
+          {{ socio.name }}
+        </mat-option>
+      </mat-select>
+      <mat-error>Selecciona un socio</mat-error>
+    </mat-form-field>
+
+    <div *ngIf="cargandoPendiente" class="pending-loading">
+      <mat-spinner diameter="18"></mat-spinner>
+      <span>Calculando comisión pendiente...</span>
+    </div>
+
+    <div *ngIf="pendienteInfo && !cargandoPendiente" class="pending-info">
+      <div class="pending-row">
+        <span class="pending-label">Generada</span>
+        <span class="pending-value">{{ pendienteInfo.generada | number:'1.0-0' }} COP</span>
+      </div>
+      <div class="pending-row">
+        <span class="pending-label">Ya pagada</span>
+        <span class="pending-value negative">- {{ pendienteInfo.pagada | number:'1.0-0' }} COP</span>
+      </div>
+      <div class="pending-row total">
+        <span class="pending-label">Pendiente</span>
+        <span class="pending-value highlight">{{ pendienteInfo.pendiente | number:'1.0-0' }} COP</span>
+      </div>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Monto a pagar (COP)</mat-label>
+      <input matInput type="number" formControlName="amount" min="1" />
+      <mat-icon matPrefix>payments</mat-icon>
+      <mat-hint *ngIf="pendienteInfo">Puedes ajustar el valor si es un pago parcial</mat-hint>
+      <mat-error>El monto es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Referencia de pago (opcional)</mat-label>
+      <input matInput formControlName="paymentReference" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha</mat-label>
+      <input matInput type="date" formControlName="date" />
+      <mat-error>La fecha es obligatoria</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid || guardando">
+    {{ guardando ? 'Guardando...' : 'Registrar' }}
+  </button>
+</mat-dialog-actions>

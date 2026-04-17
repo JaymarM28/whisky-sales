@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  users              User[]
+  products           Product[]
+  deliveries         Delivery[]
+  sales              Sale[]
+  commissionPayments CommissionPayment[]
+}
+
+model User {
+  id            String   @id @default(cuid())
+  tenantId      String?
+  tenant        Tenant?  @relation(fields: [tenantId], references: [id])
+  name          String
+  cedula        String?  @unique
+  role          Role     @default(PARTNER)
+  isAdmin       Boolean  @default(false)
+  pin           String
+  commissionPct Float    @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  deliveries         Delivery[]
+  sales              Sale[]
+  commissionPayments CommissionPayment[]
+}
+
+enum Role {
+  OWNER
+  PARTNER
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  name         String
+  reference    String
+  unitsPerBox  Int?
+  boxCost      Int?
+  costPrice    Int
+  partnerPrice Int      @default(0)
+  salePrice    Int
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  deliveries Delivery[]
+  sales      Sale[]
+
+  @@unique([tenantId, reference])
+}
+
+model Delivery {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+  partner   User     @relation(fields: [partnerId], references: [id])
+  partnerId String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model Sale {
+  id           String     @id @default(cuid())
+  tenantId     String?
+  tenant       Tenant?    @relation(fields: [tenantId], references: [id])
+  partner      User       @relation(fields: [partnerId], references: [id])
+  partnerId    String
+  product      Product    @relation(fields: [productId], references: [id])
+  productId    String
+  quantity             Int
+  date                 DateTime
+  receiptImage         String?
+  notes                String?
+  status               SaleStatus @default(PENDING)
+  costPriceSnapshot    Int?
+  salePriceSnapshot    Int?
+  partnerPriceSnapshot Int?
+  createdAt            DateTime   @default(now())
+}
+
+enum SaleStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+model CommissionPayment {
+  id               String   @id @default(cuid())
+  tenantId         String?
+  tenant           Tenant?  @relation(fields: [tenantId], references: [id])
+  partner          User     @relation(fields: [partnerId], references: [id])
+  partnerId        String
+  amount           Int
+  paymentReference String?
+  date             DateTime
+  createdAt        DateTime @default(now())
+}

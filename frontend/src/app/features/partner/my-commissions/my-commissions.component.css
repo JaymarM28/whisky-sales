@@ -1,0 +1,53 @@
+.page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.total-card {
+  margin-bottom: 16px;
+  background: #e8f5e9;
+}
+
+.total-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px !important;
+}
+
+.total-row mat-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+  color: #2e7d32;
+}
+
+.total-label {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.total-valor {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.pago-monto {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.pago-fecha {
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 13px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: rgba(0, 0, 0, 0.4);
+}

@@ -1,0 +1,204 @@
+/* ── Secciones ── */
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted, #6B6259);
+  margin: 0 0 12px 2px;
+}
+
+.section-badge {
+  font-size: 11px;
+  background: #FFF3E0;
+  color: #BF6900;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.mb-24 { margin-bottom: 24px; }
+
+/* ── Grid KPI ── */
+.kpi-grid {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.kpi-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.kpi-card mat-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px !important;
+}
+
+.kpi-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.kpi-icon.pending        { background: #ff9800; }
+.kpi-icon.confirmed      { background: #4caf50; }
+.kpi-icon.inventory      { background: #9c27b0; }
+.kpi-icon.commission-gen { background: #1565c0; }
+.kpi-icon.commission-paid{ background: #00897b; }
+.kpi-icon.commission-pend{ background: #e53935; }
+
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 1.2;
+}
+
+.kpi-label {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.54);
+  margin-top: 2px;
+}
+
+.kpi-hint {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.38);
+  margin-top: 2px;
+}
+
+.kpi-alert {
+  border-left: 3px solid #e53935 !important;
+}
+
+/* ── Tarjeta de ganancias ── */
+.ganancia-card mat-card-content {
+  padding: 24px !important;
+}
+
+.ganancia-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ganancia-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.ganancia-item.ganancia-resultado {
+  background: #F7F4EF;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.ganancia-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ganancia-icon mat-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+  color: white;
+}
+
+.bg-green      { background: #4caf50; }
+.bg-blue       { background: #1565c0; }
+.bg-dark-green { background: #1b5e20; }
+
+.ganancia-item > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.ganancia-valor {
+  font-size: 20px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.87);
+  line-height: 1.2;
+}
+
+.ganancia-valor.text-blue       { color: #1565c0; }
+.ganancia-valor.text-dark-green { color: #1b5e20; }
+
+.ganancia-etiqueta {
+  font-size: 13px;
+  color: rgba(0,0,0,0.6);
+  margin-top: 2px;
+}
+
+.ganancia-hint {
+  font-size: 11px;
+  color: rgba(0,0,0,0.38);
+  margin-top: 1px;
+}
+
+.ganancia-operador {
+  font-size: 28px;
+  font-weight: 300;
+  color: rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+
+/* ── Tabla inventario ── */
+mat-card-header mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.disponible-bajo {
+  color: #f44336;
+}
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+  .ganancia-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ganancia-operador {
+    transform: rotate(90deg);
+    font-size: 20px;
+  }
+
+  .ganancia-item {
+    min-width: unset;
+    width: 100%;
+  }
+}

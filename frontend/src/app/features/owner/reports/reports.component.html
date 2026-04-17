@@ -1,0 +1,374 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1><mat-icon>bar_chart</mat-icon> Informes</h1>
+  </div>
+
+  <mat-tab-group animationDuration="200ms" class="reports-tabs">
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB 1: RENTABILIDAD                           -->
+    <!-- ══════════════════════════════════════════════ -->
+    <mat-tab label="Rentabilidad">
+      <div class="tab-content">
+        <div *ngIf="cargandoRent" class="loading-container"><mat-spinner diameter="36"></mat-spinner></div>
+
+        <ng-container *ngIf="!cargandoRent && rentabilidad">
+
+          <!-- KPIs -->
+          <div class="kpi-row">
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon green">trending_up</mat-icon>
+              <span class="kpi-value">{{ rentabilidad.totales.gananciaTotal | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span class="kpi-label">Ganancia total</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon blue">sell</mat-icon>
+              <span class="kpi-value">{{ rentabilidad.totales.totalUnidades | number }}</span>
+              <span class="kpi-label">Unidades vendidas</span>
+            </mat-card>
+          </div>
+
+          <!-- Tabla -->
+          <mat-card>
+            <mat-card-content>
+              <table mat-table [dataSource]="rentabilidad.productos" class="full-width">
+
+                <ng-container matColumnDef="nombre">
+                  <th mat-header-cell *matHeaderCellDef>Producto</th>
+                  <td mat-cell *matCellDef="let r">
+                    {{ r.nombre }}
+                    <span class="ref-badge">{{ r.referencia }}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="costPrice">
+                  <th mat-header-cell *matHeaderCellDef>Costo botella</th>
+                  <td mat-cell *matCellDef="let r">{{ r.costPrice | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="salePrice">
+                  <th mat-header-cell *matHeaderCellDef>Precio venta</th>
+                  <td mat-cell *matCellDef="let r">{{ r.salePrice | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="gananciaPorUnidad">
+                  <th mat-header-cell *matHeaderCellDef>Ganancia/u</th>
+                  <td mat-cell *matCellDef="let r" class="green-text">{{ r.gananciaPorUnidad | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="totalVendido">
+                  <th mat-header-cell *matHeaderCellDef>Vendido</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalVendido }} u</td>
+                </ng-container>
+
+                <ng-container matColumnDef="gananciaTotal">
+                  <th mat-header-cell *matHeaderCellDef>Ganancia total</th>
+                  <td mat-cell *matCellDef="let r" class="green-text bold">{{ r.gananciaTotal | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="margenPct">
+                  <th mat-header-cell *matHeaderCellDef>Margen</th>
+                  <td mat-cell *matCellDef="let r">
+                    <mat-chip [class.chip-confirmada]="r.margenPct >= 20" [class.chip-pendiente]="r.margenPct < 20">
+                      {{ r.margenPct }}%
+                    </mat-chip>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columnasRent"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasRent"></tr>
+              </table>
+              <p *ngIf="rentabilidad.productos.length === 0" class="empty-state">Sin datos</p>
+            </mat-card-content>
+          </mat-card>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB 2: VENTAS                                 -->
+    <!-- ══════════════════════════════════════════════ -->
+    <mat-tab label="Ventas">
+      <div class="tab-content">
+
+        <!-- Filtro fechas -->
+        <mat-card class="filter-card">
+          <form [formGroup]="filtroForm" class="filter-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Desde</mat-label>
+              <input matInput type="date" formControlName="desde" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Hasta</mat-label>
+              <input matInput type="date" formControlName="hasta" />
+            </mat-form-field>
+            <button mat-raised-button color="primary" (click)="aplicarFiltro()">
+              <mat-icon>search</mat-icon> Aplicar
+            </button>
+          </form>
+        </mat-card>
+
+        <div *ngIf="cargandoVentas" class="loading-container"><mat-spinner diameter="36"></mat-spinner></div>
+
+        <ng-container *ngIf="!cargandoVentas && ventas">
+          <!-- KPIs -->
+          <div class="kpi-row">
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon blue">receipt_long</mat-icon>
+              <span class="kpi-value">{{ ventas.totalVentas | number }}</span>
+              <span class="kpi-label">Ventas confirmadas</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon amber">liquor</mat-icon>
+              <span class="kpi-value">{{ ventas.totalUnidades | number }}</span>
+              <span class="kpi-label">Unidades vendidas</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon blue">payments</mat-icon>
+              <span class="kpi-value">{{ ventas.totalIngresos | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span class="kpi-label">Ingresos totales</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon green">trending_up</mat-icon>
+              <span class="kpi-value">{{ ventas.totalGanancia | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span class="kpi-label">Ganancia bruta</span>
+            </mat-card>
+          </div>
+
+          <!-- Por mes -->
+          <p class="section-label">Por mes</p>
+          <mat-card class="mb-16">
+            <mat-card-content>
+              <table mat-table [dataSource]="ventas.porMes" class="full-width">
+                <ng-container matColumnDef="mes">
+                  <th mat-header-cell *matHeaderCellDef>Mes</th>
+                  <td mat-cell *matCellDef="let r">{{ r.mes }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalUnidades">
+                  <th mat-header-cell *matHeaderCellDef>Unidades</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalUnidades | number }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalIngresos">
+                  <th mat-header-cell *matHeaderCellDef>Ingresos</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalIngresos | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalGanancia">
+                  <th mat-header-cell *matHeaderCellDef>Ganancia</th>
+                  <td mat-cell *matCellDef="let r" class="green-text">{{ r.totalGanancia | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="columnasPorMes"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasPorMes"></tr>
+              </table>
+              <p *ngIf="ventas.porMes.length === 0" class="empty-state">Sin datos en el período</p>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Por producto -->
+          <p class="section-label">Por producto</p>
+          <mat-card class="mb-16">
+            <mat-card-content>
+              <table mat-table [dataSource]="ventas.porProducto" class="full-width">
+                <ng-container matColumnDef="nombre">
+                  <th mat-header-cell *matHeaderCellDef>Producto</th>
+                  <td mat-cell *matCellDef="let r">{{ r.nombre }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalUnidades">
+                  <th mat-header-cell *matHeaderCellDef>Unidades</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalUnidades | number }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalIngresos">
+                  <th mat-header-cell *matHeaderCellDef>Ingresos</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalIngresos | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalGanancia">
+                  <th mat-header-cell *matHeaderCellDef>Ganancia</th>
+                  <td mat-cell *matCellDef="let r" class="green-text">{{ r.totalGanancia | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="columnasPorProducto"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasPorProducto"></tr>
+              </table>
+              <p *ngIf="ventas.porProducto.length === 0" class="empty-state">Sin datos en el período</p>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Por socio -->
+          <p class="section-label">Por socio</p>
+          <mat-card>
+            <mat-card-content>
+              <table mat-table [dataSource]="ventas.porSocio" class="full-width">
+                <ng-container matColumnDef="nombre">
+                  <th mat-header-cell *matHeaderCellDef>Socio</th>
+                  <td mat-cell *matCellDef="let r">{{ r.nombre }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalUnidades">
+                  <th mat-header-cell *matHeaderCellDef>Unidades</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalUnidades | number }}</td>
+                </ng-container>
+                <ng-container matColumnDef="totalIngresos">
+                  <th mat-header-cell *matHeaderCellDef>Ingresos</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalIngresos | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="columnasPorSocio"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasPorSocio"></tr>
+              </table>
+              <p *ngIf="ventas.porSocio.length === 0" class="empty-state">Sin datos en el período</p>
+            </mat-card-content>
+          </mat-card>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB 3: SOCIOS                                 -->
+    <!-- ══════════════════════════════════════════════ -->
+    <mat-tab label="Socios">
+      <div class="tab-content">
+        <div *ngIf="cargandoSocios" class="loading-container"><mat-spinner diameter="36"></mat-spinner></div>
+
+        <ng-container *ngIf="!cargandoSocios">
+          <mat-card>
+            <mat-card-content>
+              <table mat-table [dataSource]="socios" class="full-width">
+
+                <ng-container matColumnDef="nombre">
+                  <th mat-header-cell *matHeaderCellDef>Socio</th>
+                  <td mat-cell *matCellDef="let r">
+                    {{ r.nombre }}
+                    <mat-chip *ngIf="!r.activo" class="chip-rechazada chip-sm">Inactivo</mat-chip>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="totalEntregado">
+                  <th mat-header-cell *matHeaderCellDef>Entregado</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalEntregado | number }} u</td>
+                </ng-container>
+
+                <ng-container matColumnDef="totalVendido">
+                  <th mat-header-cell *matHeaderCellDef>Vendido</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalVendido | number }} u</td>
+                </ng-container>
+
+                <ng-container matColumnDef="disponible">
+                  <th mat-header-cell *matHeaderCellDef>Disponible</th>
+                  <td mat-cell *matCellDef="let r">{{ r.disponible | number }} u</td>
+                </ng-container>
+
+                <ng-container matColumnDef="rendimientoPct">
+                  <th mat-header-cell *matHeaderCellDef>Rendimiento</th>
+                  <td mat-cell *matCellDef="let r">
+                    <mat-chip [class.chip-confirmada]="r.rendimientoPct >= 50" [class.chip-pendiente]="r.rendimientoPct < 50">
+                      {{ r.rendimientoPct }}%
+                    </mat-chip>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="comisionGenerada">
+                  <th mat-header-cell *matHeaderCellDef>Comisión generada</th>
+                  <td mat-cell *matCellDef="let r">{{ r.comisionGenerada | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="comisionPagada">
+                  <th mat-header-cell *matHeaderCellDef>Comisión pagada</th>
+                  <td mat-cell *matCellDef="let r" class="green-text">{{ r.comisionPagada | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="comisionPendiente">
+                  <th mat-header-cell *matHeaderCellDef>Pendiente</th>
+                  <td mat-cell *matCellDef="let r" [class.amber-text]="r.comisionPendiente > 0">
+                    {{ r.comisionPendiente | currency:'COP':'symbol':'1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columnasSocios"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasSocios"></tr>
+              </table>
+              <p *ngIf="socios.length === 0" class="empty-state">Sin socios registrados</p>
+            </mat-card-content>
+          </mat-card>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB 4: INVENTARIO                             -->
+    <!-- ══════════════════════════════════════════════ -->
+    <mat-tab label="Inventario">
+      <div class="tab-content">
+        <div *ngIf="cargandoInv" class="loading-container"><mat-spinner diameter="36"></mat-spinner></div>
+
+        <ng-container *ngIf="!cargandoInv && inventario">
+
+          <!-- KPIs -->
+          <div class="kpi-row">
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon blue">liquor</mat-icon>
+              <span class="kpi-value">{{ inventario.totales.totalDisponible | number }}</span>
+              <span class="kpi-label">Botellas disponibles</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon amber">account_balance_wallet</mat-icon>
+              <span class="kpi-value">{{ inventario.totales.inversionTotal | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span class="kpi-label">Inversión en stock</span>
+            </mat-card>
+            <mat-card class="kpi-card" [class.kpi-alert]="inventario.totales.productosBajoStock > 0">
+              <mat-icon class="kpi-icon red">warning</mat-icon>
+              <span class="kpi-value">{{ inventario.totales.productosBajoStock }}</span>
+              <span class="kpi-label">Productos bajo stock</span>
+            </mat-card>
+          </div>
+
+          <mat-card>
+            <mat-card-content>
+              <table mat-table [dataSource]="inventario.productos" class="full-width">
+
+                <ng-container matColumnDef="nombre">
+                  <th mat-header-cell *matHeaderCellDef>Producto</th>
+                  <td mat-cell *matCellDef="let r">{{ r.nombre }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="disponible">
+                  <th mat-header-cell *matHeaderCellDef>Disponible</th>
+                  <td mat-cell *matCellDef="let r">{{ r.disponible | number }} bot.</td>
+                </ng-container>
+
+                <ng-container matColumnDef="cajasDisponibles">
+                  <th mat-header-cell *matHeaderCellDef>Cajas equiv.</th>
+                  <td mat-cell *matCellDef="let r">
+                    <span *ngIf="r.cajasDisponibles !== null">{{ r.cajasDisponibles }}</span>
+                    <span *ngIf="r.cajasDisponibles === null" class="text-muted">—</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="rotacionPct">
+                  <th mat-header-cell *matHeaderCellDef>Rotación</th>
+                  <td mat-cell *matCellDef="let r">
+                    <mat-chip [class.chip-confirmada]="r.rotacionPct >= 60" [class.chip-pendiente]="r.rotacionPct < 60">
+                      {{ r.rotacionPct }}%
+                    </mat-chip>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="inversionDisponible">
+                  <th mat-header-cell *matHeaderCellDef>Inversión en stock</th>
+                  <td mat-cell *matCellDef="let r">{{ r.inversionDisponible | currency:'COP':'symbol':'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="bajoStock">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let r">
+                    <mat-chip *ngIf="r.bajoStock" class="chip-rechazada">Bajo stock</mat-chip>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columnasInv"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasInv"></tr>
+              </table>
+              <p *ngIf="inventario.productos.length === 0" class="empty-state">Sin productos activos</p>
+            </mat-card-content>
+          </mat-card>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>

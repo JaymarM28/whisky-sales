@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>
+  <mat-icon>add_business</mat-icon> Nuevo negocio
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre del negocio</mat-label>
+      <input matInput formControlName="name" placeholder="ej: J&L Liquors" />
+      <mat-error>El nombre es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Código (slug)</mat-label>
+      <input matInput formControlName="slug" placeholder="ej: jl-liquors" />
+      <mat-hint>Solo letras minúsculas, números y guiones</mat-hint>
+      <mat-error *ngIf="form.get('slug')?.hasError('required')">Obligatorio</mat-error>
+      <mat-error *ngIf="form.get('slug')?.hasError('pattern')">
+        Solo letras minúsculas, números y guiones
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid || guardando">
+    {{ guardando ? 'Creando...' : 'Crear negocio' }}
+  </button>
+</mat-dialog-actions>

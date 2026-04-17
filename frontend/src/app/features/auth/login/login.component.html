@@ -1,0 +1,60 @@
+<div class="login-page">
+
+  <!-- Panel izquierdo: branding -->
+  <div class="brand-panel">
+    <div class="brand-content">
+      <mat-icon class="brand-icon">liquor</mat-icon>
+      <h1 class="brand-title">Sales Manager</h1>
+      <p class="brand-sub">Gestión de ventas y comisiones para tu equipo comercial</p>
+    </div>
+  </div>
+
+  <!-- Panel derecho: formulario -->
+  <div class="form-panel">
+    <div class="form-wrapper">
+
+      <!-- Logo visible solo en móvil -->
+      <div class="mobile-header">
+        <mat-icon class="mobile-icon">liquor</mat-icon>
+        <span class="mobile-title">Sales Manager</span>
+      </div>
+
+      <h2 class="form-title">Iniciar sesión</h2>
+
+      <form [formGroup]="form" (ngSubmit)="ingresar()">
+
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Cédula</mat-label>
+          <mat-icon matPrefix>badge</mat-icon>
+          <input matInput formControlName="cedula" inputmode="numeric" autocomplete="username" />
+          <mat-error *ngIf="form.get('cedula')?.hasError('required')">Obligatorio</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>PIN</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input
+            matInput
+            [type]="pinVisible ? 'text' : 'password'"
+            formControlName="pin"
+            inputmode="numeric"
+            maxlength="6"
+            autocomplete="current-password"
+          />
+          <button mat-icon-button matSuffix type="button" (click)="pinVisible = !pinVisible">
+            <mat-icon>{{ pinVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="form.get('pin')?.hasError('required')">Obligatorio</mat-error>
+          <mat-error *ngIf="form.get('pin')?.hasError('minlength')">Mínimo 4 dígitos</mat-error>
+        </mat-form-field>
+
+        <button mat-flat-button class="btn-submit" type="submit" [disabled]="cargando">
+          <mat-spinner *ngIf="cargando" diameter="20"></mat-spinner>
+          <span *ngIf="!cargando">Ingresar</span>
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+</div>

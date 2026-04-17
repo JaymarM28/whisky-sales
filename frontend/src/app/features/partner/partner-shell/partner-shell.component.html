@@ -1,0 +1,54 @@
+<mat-sidenav-container class="sidenav-container">
+
+  <mat-sidenav
+    #sidenav
+    [mode]="isMobile ? 'over' : 'side'"
+    [opened]="sidenavAbierto"
+    class="sidenav"
+  >
+    <div class="sidenav-brand">
+      <mat-icon class="brand-icon">liquor</mat-icon>
+      <div class="brand-text">
+        <span class="brand-name">J&amp;L Liquors</span>
+        <span class="brand-role">Socio vendedor</span>
+      </div>
+    </div>
+
+    <mat-nav-list class="nav-list">
+      <a
+        mat-list-item
+        *ngFor="let item of navItems"
+        [routerLink]="item.route"
+        routerLinkActive="active-link"
+      >
+        <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
+        <span matListItemTitle class="nav-label">{{ item.label }}</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="main-content">
+
+    <mat-toolbar class="navbar">
+      <button mat-icon-button class="menu-btn" (click)="sidenav.toggle()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="navbar-title">{{ paginaActual }}</span>
+      <span class="spacer"></span>
+
+      <div class="navbar-user" [class.hide-mobile]="isMobile">
+        <mat-icon class="user-icon">account_circle</mat-icon>
+        <span class="user-name">{{ authService.currentUser?.name }}</span>
+      </div>
+
+      <button mat-icon-button (click)="cerrarSesion()" matTooltip="Cerrar sesión" class="navbar-btn logout-btn">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>

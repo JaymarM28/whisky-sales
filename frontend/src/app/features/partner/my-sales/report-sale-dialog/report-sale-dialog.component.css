@@ -1,0 +1,55 @@
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+mat-form-field {
+  margin-bottom: 8px;
+}
+
+.upload-section {
+  margin-top: 8px;
+}
+
+.upload-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.7);
+  margin-bottom: 8px;
+}
+
+.upload-label mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.requerido {
+  color: #f44336;
+}
+
+.opcional {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  font-style: italic;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 4px;
+}
+
+.preview-container {
+  margin-top: 12px;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}

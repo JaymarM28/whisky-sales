@@ -1,0 +1,168 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: #F7F4EF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Variables de color ── */
+:root {
+  --brand-dark:    #1A1208;
+  --brand-mid:     #2C1F0E;
+  --brand-gold:    #C9963A;
+  --brand-gold-lt: #E8C97A;
+  --brand-cream:   #F7F4EF;
+  --brand-gray:    #6B6259;
+  --text-primary:  #1A1208;
+  --text-muted:    #6B6259;
+}
+
+/* ── Utilidades ── */
+.spacer { flex: 1 1 auto; }
+.full-width { width: 100%; }
+
+/* ── Contenedor de página ── */
+.page-container {
+  padding: 28px 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-header h1 mat-icon {
+  color: var(--brand-gold);
+}
+
+/* ── Tabla ── */
+.table-container { overflow-x: auto; }
+table { width: 100%; }
+
+.mat-column-actions {
+  width: 130px;
+  text-align: right;
+}
+
+/* ── Chips de estado ── */
+.chip-pendiente {
+  background-color: #FFF3E0 !important;
+  color: #BF6900 !important;
+  font-weight: 500 !important;
+}
+.chip-confirmada {
+  background-color: #E8F5E9 !important;
+  color: #2E7D32 !important;
+  font-weight: 500 !important;
+}
+.chip-rechazada {
+  background-color: #FFEBEE !important;
+  color: #C62828 !important;
+  font-weight: 500 !important;
+}
+
+/* ── Estados vacíos / carga ── */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 56px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 56px;
+  color: var(--text-muted);
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  opacity: .4;
+}
+
+/* ── Dialog ── */
+.dialog-content { min-width: 420px; }
+
+/*
+ * Evita que la etiqueta flotante del primer mat-form-field
+ * quede cortada o encima del título del modal.
+ * Angular Material MDC aplica overflow: hidden en mat-dialog-content,
+ * por lo que se necesita padding-top suficiente.
+ */
+.mat-mdc-dialog-content {
+  padding-top: 12px !important;
+  overflow: visible !important;
+}
+
+/* Garantiza que el overlay del diálogo no corte las etiquetas flotantes */
+.mat-mdc-dialog-surface {
+  overflow: visible !important;
+}
+
+/* El scroll debe estar en el contenido, no en el surface */
+.mat-mdc-dialog-content {
+  max-height: 75vh;
+  overflow-y: auto !important;
+}
+
+/* ── mat-card base ── */
+mat-card {
+  border-radius: 12px !important;
+  box-shadow: 0 1px 4px rgba(26,18,8,.08) !important;
+  margin-bottom: 20px;
+}
+
+/* ── Código inline ── */
+code {
+  background: #EDE8E1;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--brand-mid);
+}
+
+@media (max-width: 767px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dialog-content {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .table-container {
+    font-size: 13px;
+  }
+
+  /* Ocultar columnas secundarias en móvil */
+  .mat-column-notas,
+  .mat-column-referencia,
+  .mat-column-createdAt {
+    display: none;
+  }
+}

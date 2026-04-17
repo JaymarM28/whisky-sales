@@ -1,0 +1,87 @@
+<h2 mat-dialog-title>
+  <mat-icon>point_of_sale</mat-icon>
+  Reportar venta
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Producto</mat-label>
+      <mat-select formControlName="productId">
+        <mat-option *ngFor="let item of inventario" [value]="item.product.id">
+          {{ item.product.name }} ({{ item.available }} disponibles)
+        </mat-option>
+      </mat-select>
+      <mat-error>Selecciona un producto</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Cantidad</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="quantity"
+        min="1"
+        [max]="getDisponible()"
+      />
+      <mat-hint *ngIf="form.value.productId">
+        Máximo disponible: {{ getDisponible() }}
+      </mat-hint>
+      <mat-error *ngIf="form.get('quantity')?.hasError('min')">La cantidad debe ser mayor a 0</mat-error>
+      <mat-error *ngIf="form.get('quantity')?.hasError('max')">
+        Solo tienes {{ form.get('quantity')?.errors?.['max']?.max }} unidades disponibles
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha</mat-label>
+      <input matInput type="date" formControlName="date" />
+      <mat-error>La fecha es obligatoria</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notas (opcional)</mat-label>
+      <textarea matInput formControlName="notes" rows="2"></textarea>
+    </mat-form-field>
+
+    <div class="upload-section">
+      <p class="upload-label">
+        <mat-icon>camera_alt</mat-icon>
+        Comprobante de venta <span class="opcional">(opcional)</span>
+      </p>
+
+      <input
+        #fileInput
+        type="file"
+        accept="image/jpeg,image/png"
+        hidden
+        (change)="onArchivoSeleccionado($event)"
+      />
+
+      <button mat-stroked-button type="button" (click)="fileInput.click()">
+        <mat-icon>upload</mat-icon>
+        {{ archivoSeleccionado ? 'Cambiar imagen' : 'Seleccionar imagen' }}
+      </button>
+
+      <div *ngIf="previewUrl" class="preview-container">
+        <img [src]="previewUrl" alt="Vista previa" class="preview-img" />
+      </div>
+
+      <p *ngIf="!archivoSeleccionado" class="upload-hint">
+        Solo JPG o PNG, máximo 5 MB
+      </p>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="guardar()"
+    [disabled]="form.invalid || guardando"
+  >
+    {{ guardando ? 'Enviando...' : 'Reportar' }}
+  </button>
+</mat-dialog-actions>

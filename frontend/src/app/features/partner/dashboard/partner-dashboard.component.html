@@ -1,0 +1,52 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Mi Dashboard</h1>
+    <button mat-icon-button (click)="cargarDatos()" matTooltip="Actualizar">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <div *ngIf="cargando" class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <div *ngIf="!cargando && resumen">
+    <div class="comision-banner">
+      <mat-card class="comision-card">
+        <mat-card-content>
+          <div class="comision-icon">
+            <mat-icon>account_balance_wallet</mat-icon>
+          </div>
+          <div class="comision-info">
+            <span class="comision-label">Comisión pendiente de pago</span>
+            <span class="comision-valor">{{ resumen.comisionPendiente | copCurrency }}</span>
+            <span class="comision-sub">
+              Generada: {{ resumen.comisionGenerada | copCurrency }} —
+              Pagada: {{ resumen.comisionPagada | copCurrency }}
+            </span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <h2>Inventario disponible</h2>
+
+    <div *ngIf="resumen.inventario.length === 0" class="empty-state">
+      <mat-icon>inventory_2</mat-icon>
+      <p>No tienes productos asignados aún</p>
+    </div>
+
+    <div class="inventario-grid">
+      <mat-card *ngFor="let item of resumen.inventario" class="inventario-card">
+        <mat-card-content>
+          <div class="inventario-icon">
+            <mat-icon>liquor</mat-icon>
+          </div>
+          <span class="inventario-nombre">{{ item.product.name }}</span>
+          <span class="inventario-cantidad">{{ item.disponible }}</span>
+          <span class="inventario-unidad">unidades disponibles</span>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

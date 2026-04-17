@@ -1,0 +1,60 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1><mat-icon>payments</mat-icon> Comisiones</h1>
+    <button mat-raised-button color="primary" (click)="abrirPago()">
+      <mat-icon>add</mat-icon>
+      Registrar pago
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Historial de pagos</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="cargando" class="loading-container">
+        <mat-spinner diameter="36"></mat-spinner>
+      </div>
+
+      <div *ngIf="!cargando" class="table-container">
+        <table mat-table [dataSource]="pagos">
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let row">{{ row.date | date:'dd/MM/yyyy' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="socio">
+            <th mat-header-cell *matHeaderCellDef>Socio</th>
+            <td mat-cell *matCellDef="let row">{{ row.partner?.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="monto">
+            <th mat-header-cell *matHeaderCellDef>Monto</th>
+            <td mat-cell *matCellDef="let row">
+              <strong>{{ row.amount | copCurrency }}</strong>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="referencia">
+            <th mat-header-cell *matHeaderCellDef>Referencia</th>
+            <td mat-cell *matCellDef="let row">{{ row.paymentReference || '-' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button color="warn" (click)="confirmarEliminar(row)" matTooltip="Eliminar">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnasPagos"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasPagos"></tr>
+        </table>
+
+        <p *ngIf="pagos.length === 0" class="empty-state">No hay pagos registrados</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

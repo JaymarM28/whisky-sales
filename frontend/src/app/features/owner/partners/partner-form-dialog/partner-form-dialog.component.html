@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ esEdicion ? 'edit' : 'person_add' }}</mat-icon>
+  {{ esEdicion ? 'Editar socio' : 'Nuevo socio' }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+      <mat-error>El nombre es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ esEdicion ? 'Cédula (dejar vacío para no cambiar)' : 'Cédula' }}</mat-label>
+      <input matInput formControlName="cedula" inputmode="numeric" />
+      <mat-error *ngIf="form.get('cedula')?.hasError('required')">La cédula es obligatoria</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ esEdicion ? 'Nuevo PIN (dejar vacío para no cambiar)' : 'PIN' }}</mat-label>
+      <input matInput type="password" formControlName="pin" inputmode="numeric" maxlength="6" />
+      <mat-error *ngIf="form.get('pin')?.hasError('required')">El PIN es obligatorio</mat-error>
+      <mat-error *ngIf="form.get('pin')?.hasError('minlength')">Mínimo 4 dígitos</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Comisión (%)</mat-label>
+      <input matInput type="number" formControlName="commissionPct" min="0" max="100" />
+      <mat-error>Valor entre 0 y 100</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="guardar()"
+    [disabled]="form.invalid || guardando"
+  >
+    {{ guardando ? 'Guardando...' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

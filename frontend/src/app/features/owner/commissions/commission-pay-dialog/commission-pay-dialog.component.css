@@ -1,0 +1,61 @@
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+mat-form-field {
+  margin-bottom: 8px;
+}
+
+.pending-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  color: #6B6259;
+  font-size: 13px;
+}
+
+.pending-info {
+  background: #F7F4EF;
+  border: 1px solid #E8E2D9;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pending-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.pending-row.total {
+  border-top: 1px solid #E8E2D9;
+  padding-top: 6px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.pending-label {
+  color: #6B6259;
+}
+
+.pending-value {
+  color: #1A1208;
+  font-weight: 500;
+}
+
+.pending-value.negative {
+  color: #C62828;
+}
+
+.pending-value.highlight {
+  color: #C9963A;
+  font-size: 15px;
+}
