@@ -5,11 +5,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.setGlobalPrefix('api');
+  app.use(helmet());
 
   // Swagger
   const swaggerConfig = new DocumentBuilder()
@@ -43,8 +45,18 @@ async function bootstrap() {
     prefix: '/uploads',
   });
 
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:4200')
+    .split(',')
+    .map((o) => o.trim());
+
   app.enableCors({
-    origin: '*',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origen no permitido: ${origin}`));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
