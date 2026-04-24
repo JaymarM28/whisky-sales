@@ -40,8 +40,8 @@ export class CreateOwnerDialogComponent implements OnInit {
       },
       error: (err: any) => {
         this.guardando = false;
-        const msg = err?.error?.message || 'Error al crear el owner';
-        this.snackBar.open(msg, 'Cerrar', { duration: 3000 });
+        const msg = err?.error?.error || err?.error?.message || 'Error al crear el owner';
+        this.snackBar.open(msg, 'Cerrar', { duration: 4000 });
       },
     });
   }
