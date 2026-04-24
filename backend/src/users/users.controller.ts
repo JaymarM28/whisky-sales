@@ -41,13 +41,12 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Crear socio (OWNER crea PARTNER) o crear owner (ADMIN crea OWNER)' })
-  @UseGuards(RolesGuard)
-  @Roles('OWNER')
   @Post()
   create(@Body() dto: CreateUserDto, @Request() req) {
     return this.usersService.create(dto, {
       tenantId: req.user.tenantId,
       isAdmin: req.user.isAdmin,
+      role: req.user.role,
     });
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -44,41 +44,55 @@ export class UsersService {
    * OWNER crea un PARTNER en su tenant.
    * ADMIN crea un OWNER asignándolo a un tenant específico (tenantId en el DTO).
    */
-  async create(dto: CreateUserDto, requester: { tenantId: string; isAdmin: boolean }) {
+  async create(dto: CreateUserDto, requester: { tenantId: string; isAdmin: boolean; role: string }) {
+    if (!requester.isAdmin && requester.role !== 'OWNER') {
+      throw new ForbiddenException('No tienes permisos para crear usuarios');
+    }
+
     const pinHash = await bcrypt.hash(dto.pin, 10);
 
-    // Admin puede crear OWNERs con tenantId explícito en el DTO
-    if (requester.isAdmin && dto.role === 'OWNER') {
-      if (!dto.tenantId) {
-        throw new ForbiddenException('Debes indicar el tenantId al crear un OWNER');
+    try {
+      // Admin puede crear OWNERs con tenantId explícito en el DTO
+      if (requester.isAdmin && dto.role === 'OWNER') {
+        if (!dto.tenantId) {
+          throw new ForbiddenException('Debes indicar el tenantId al crear un OWNER');
+        }
+        const user = await this.prisma.user.create({
+          data: {
+            tenantId: dto.tenantId,
+            name: dto.name,
+            cedula: dto.cedula,
+            role: 'OWNER',
+            pin: pinHash,
+            commissionPct: 0,
+          },
+          select: USER_SELECT,
+        });
+        return { data: user, error: null, message: 'Owner creado exitosamente' };
       }
+
+      // OWNER crea un PARTNER en su propio tenant
       const user = await this.prisma.user.create({
         data: {
-          tenantId: dto.tenantId,
+          tenantId: requester.tenantId,
           name: dto.name,
           cedula: dto.cedula,
-          role: 'OWNER',
+          role: 'PARTNER',
           pin: pinHash,
-          commissionPct: 0,
+          commissionPct: dto.commissionPct ?? 20,
         },
         select: USER_SELECT,
       });
-      return { data: user, error: null, message: 'Owner creado exitosamente' };
+      return { data: user, error: null, message: 'Socio creado exitosamente' };
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        throw new ConflictException('Ya existe un usuario con esa cédula');
+      }
+      if (err?.code === 'P2003') {
+        throw new NotFoundException('El negocio seleccionado no existe');
+      }
+      throw err;
     }
-
-    // OWNER crea un PARTNER en su propio tenant
-    const user = await this.prisma.user.create({
-      data: {
-        tenantId: requester.tenantId,
-        name: dto.name,
-        cedula: dto.cedula,
-        role: 'PARTNER',
-        pin: pinHash,
-        commissionPct: dto.commissionPct ?? 20,
-      },
-      select: USER_SELECT,
-    });
-    return { data: user, error: null, message: 'Socio creado exitosamente' };
   }
 
   async update(id: string, dto: UpdateUserDto, tenantId: string) {
