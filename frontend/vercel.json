@@ -1,4 +1,6 @@
 {
+  "buildCommand": "ng build --configuration=production",
+  "outputDirectory": "dist/whisky-frontend/browser",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
