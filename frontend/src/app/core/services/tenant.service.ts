@@ -25,4 +25,8 @@ export class TenantService {
   create(data: { name: string; slug: string }): Observable<ApiResponse<Tenant>> {
     return this.http.post<ApiResponse<Tenant>>(this.apiUrl, data);
   }
+
+  toggle(id: string): Observable<ApiResponse<Tenant>> {
+    return this.http.patch<ApiResponse<Tenant>>(`${this.apiUrl}/${id}/toggle`, {});
+  }
 }

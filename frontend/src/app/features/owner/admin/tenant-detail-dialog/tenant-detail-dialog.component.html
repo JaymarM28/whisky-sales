@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>
+  <mat-icon>store</mat-icon>
+  {{ tenant.name }}
+</h2>
+
+<mat-dialog-content>
+  <div class="info-row">
+    <span class="label">Código (slug)</span>
+    <code>{{ tenant.slug }}</code>
+  </div>
+
+  <div class="info-row">
+    <span class="label">Estado</span>
+    <mat-chip [class.chip-confirmada]="tenant.active" [class.chip-rechazada]="!tenant.active">
+      {{ tenant.active ? 'Activo' : 'Inactivo' }}
+    </mat-chip>
+  </div>
+
+  <div class="info-row">
+    <span class="label">Creado</span>
+    <span>{{ tenant.createdAt | date:'dd/MM/yyyy' }}</span>
+  </div>
+
+  <div class="owners-section">
+    <p class="owners-title">
+      <mat-icon>people</mat-icon>
+      Owners asignados ({{ owners.length }})
+    </p>
+    <mat-list dense *ngIf="owners.length > 0">
+      <mat-list-item *ngFor="let o of owners">
+        <mat-icon matListItemIcon>person</mat-icon>
+        <span matListItemTitle>{{ o.name }}</span>
+        <span matListItemLine class="cedula">CC {{ o.cedula }}</span>
+      </mat-list-item>
+    </mat-list>
+    <p *ngIf="owners.length === 0" class="sin-owners">Sin owners asignados</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+  <button
+    mat-raised-button
+    [color]="tenant.active ? 'warn' : 'primary'"
+    (click)="toggle()"
+    [disabled]="toggling">
+    <mat-icon>{{ tenant.active ? 'block' : 'check_circle' }}</mat-icon>
+    {{ tenant.active ? 'Desactivar negocio' : 'Activar negocio' }}
+  </button>
+</mat-dialog-actions>

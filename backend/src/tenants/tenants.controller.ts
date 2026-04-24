@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
@@ -24,6 +24,14 @@ export class TenantsController {
   @Get()
   findAll() {
     return this.tenantsService.findAll();
+  }
+
+  @ApiOperation({ summary: 'Activar o desactivar un negocio (solo ADMIN)' })
+  @ApiBearerAuth('JWT')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Patch(':id/toggle')
+  toggleActive(@Param('id') id: string) {
+    return this.tenantsService.toggleActive(id);
   }
 
   @ApiOperation({ summary: 'Verificar que un negocio existe por slug (público)' })

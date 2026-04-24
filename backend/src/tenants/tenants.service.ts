@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 
@@ -27,5 +27,17 @@ export class TenantsService {
   async findAll() {
     const tenants = await this.prisma.tenant.findMany({ orderBy: { name: 'asc' } });
     return { data: tenants, error: null, message: null };
+  }
+
+  async toggleActive(id: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) throw new NotFoundException('Negocio no encontrado');
+
+    const updated = await this.prisma.tenant.update({
+      where: { id },
+      data: { active: !tenant.active },
+    });
+    const estado = updated.active ? 'activado' : 'desactivado';
+    return { data: updated, error: null, message: `Negocio ${estado} exitosamente` };
   }
 }

@@ -6,6 +6,7 @@ import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { CreateTenantDialogComponent } from './create-tenant-dialog/create-tenant-dialog.component';
 import { CreateOwnerDialogComponent } from './create-owner-dialog/create-owner-dialog.component';
+import { TenantDetailDialogComponent } from './tenant-detail-dialog/tenant-detail-dialog.component';
 
 @Component({
   selector: 'app-admin',
@@ -64,7 +65,10 @@ export class AdminComponent implements OnInit {
   }
 
   toggleTenant(tenant: Tenant): void {
-    // Por ahora solo muestra info — se puede extender con un endpoint de toggle
-    this.snackBar.open(`Tenant: ${tenant.slug}`, 'Cerrar', { duration: 2000 });
+    const ref = this.dialog.open(TenantDetailDialogComponent, {
+      width: '460px',
+      data: { tenant, owners: this.owners },
+    });
+    ref.afterClosed().subscribe((cambiado) => { if (cambiado) this.cargarTenants(); });
   }
 }

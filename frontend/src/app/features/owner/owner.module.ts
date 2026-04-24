@@ -38,6 +38,7 @@ import { SettingsComponent } from './settings/settings.component';
 import { AdminComponent } from './admin/admin.component';
 import { CreateTenantDialogComponent } from './admin/create-tenant-dialog/create-tenant-dialog.component';
 import { CreateOwnerDialogComponent } from './admin/create-owner-dialog/create-owner-dialog.component';
+import { TenantDetailDialogComponent } from './admin/tenant-detail-dialog/tenant-detail-dialog.component';
 import { ReportsComponent } from './reports/reports.component';
 
 @NgModule({
@@ -58,6 +59,7 @@ import { ReportsComponent } from './reports/reports.component';
     AdminComponent,
     CreateTenantDialogComponent,
     CreateOwnerDialogComponent,
+    TenantDetailDialogComponent,
     ReportsComponent,
   ],
   imports: [
