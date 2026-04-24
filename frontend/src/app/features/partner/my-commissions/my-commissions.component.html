@@ -23,9 +23,7 @@
       <mat-card-title>Historial de pagos recibidos</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div *ngIf="cargando" class="loading-container">
-        <mat-spinner diameter="36"></mat-spinner>
-      </div>
+      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="3"></app-skeleton-table>
 
       <mat-list *ngIf="!cargando && pagos.length > 0">
         <mat-list-item *ngFor="let pago of pagos" class="pago-item">
@@ -37,6 +35,16 @@
           </div>
         </mat-list-item>
       </mat-list>
+
+      <mat-paginator
+        *ngIf="totalItems > pageSize"
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        [pageIndex]="currentPage - 1"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
 
       <p *ngIf="!cargando && pagos.length === 0" class="empty-state">
         No has recibido pagos de comisión aún

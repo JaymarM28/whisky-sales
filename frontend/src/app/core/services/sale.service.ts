@@ -11,8 +11,8 @@ export class SaleService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ApiResponse<Sale[]>> {
-    return this.http.get<ApiResponse<Sale[]>>(this.apiUrl);
+  getAll(page = 1, limit = 20): Observable<ApiResponse<Sale[]>> {
+    return this.http.get<ApiResponse<Sale[]>>(this.apiUrl, { params: { page, limit } });
   }
 
   create(formData: FormData): Observable<ApiResponse<Sale>> {

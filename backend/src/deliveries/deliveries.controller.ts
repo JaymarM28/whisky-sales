@@ -12,6 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { DeliveriesService } from './deliveries.service';
 import { CreateDeliveryDto } from './dto/create-delivery.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -32,8 +33,9 @@ export class DeliveriesController {
     @Request() req,
     @Query('partnerId') partnerId?: string,
     @Query('productId') productId?: string,
+    @Query() pagination?: PaginationDto,
   ) {
-    return this.deliveriesService.findAll(req.user.tenantId, partnerId, productId);
+    return this.deliveriesService.findAll(req.user.tenantId, partnerId, productId, pagination?.page, pagination?.limit);
   }
 
   @ApiOperation({ summary: 'Registrar entrega a un socio' })

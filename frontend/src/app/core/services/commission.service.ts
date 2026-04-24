@@ -11,8 +11,8 @@ export class CommissionService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ApiResponse<CommissionPayment[]>> {
-    return this.http.get<ApiResponse<CommissionPayment[]>>(this.apiUrl);
+  getAll(page = 1, limit = 20): Observable<ApiResponse<CommissionPayment[]>> {
+    return this.http.get<ApiResponse<CommissionPayment[]>>(this.apiUrl, { params: { page, limit } });
   }
 
   create(data: { partnerId: string; amount: number; paymentReference?: string; date: string }): Observable<ApiResponse<CommissionPayment>> {

@@ -6,12 +6,14 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -53,8 +55,8 @@ export class SalesController {
 
   @ApiOperation({ summary: 'Listar ventas (OWNER: todas | PARTNER: las suyas)' })
   @Get()
-  findAll(@Request() req) {
-    return this.salesService.findAll(req.user.id, req.user.role, req.user.tenantId);
+  findAll(@Request() req, @Query() pagination: PaginationDto) {
+    return this.salesService.findAll(req.user.id, req.user.role, req.user.tenantId, pagination.page, pagination.limit);
   }
 
   @ApiOperation({ summary: 'Reportar venta con comprobante (multipart/form-data)' })

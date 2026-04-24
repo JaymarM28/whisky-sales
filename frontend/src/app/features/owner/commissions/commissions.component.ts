@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommissionService } from '../../../core/services/commission.service';
@@ -19,7 +20,11 @@ export class CommissionsComponent implements OnInit {
   socios: User[] = [];
   resumenSocios: any[] = [];
   cargando = true;
+  totalItems = 0;
+  pageSize = 20;
+  currentPage = 1;
   columnasPagos = ['fecha', 'socio', 'monto', 'referencia', 'acciones'];
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private commissionService: CommissionService,
@@ -40,15 +45,22 @@ export class CommissionsComponent implements OnInit {
       this.socios = res.data.filter((u) => u.active && u.role === 'PARTNER');
     });
 
-    this.commissionService.getAll().subscribe({
+    this.commissionService.getAll(this.currentPage, this.pageSize).subscribe({
       next: (res) => {
         this.pagos = res.data;
+        this.totalItems = res.total ?? 0;
         this.cargando = false;
       },
       error: () => {
         this.cargando = false;
       },
     });
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex + 1;
+    this.pageSize = event.pageSize;
+    this.cargarDatos();
   }
 
   abrirPago(): void {

@@ -6,16 +6,15 @@ import { CreateCommissionDto } from './dto/create-commission.dto';
 export class CommissionsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(userId: string, role: string, tenantId: string) {
+  async findAll(userId: string, role: string, tenantId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
     const where = role === 'PARTNER' ? { partnerId: userId, tenantId } : { tenantId };
-    const payments = await this.prisma.commissionPayment.findMany({
-      where,
-      include: {
-        partner: { select: { id: true, name: true } },
-      },
-      orderBy: { date: 'desc' },
-    });
-    return { data: payments, error: null, message: null };
+    const include = { partner: { select: { id: true, name: true } } };
+    const [data, total] = await Promise.all([
+      this.prisma.commissionPayment.findMany({ where, include, orderBy: { date: 'desc' }, skip, take: limit }),
+      this.prisma.commissionPayment.count({ where }),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit), error: null, message: null };
   }
 
   async create(dto: CreateCommissionDto, tenantId: string) {

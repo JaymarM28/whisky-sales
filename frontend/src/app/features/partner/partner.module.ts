@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import { PartnerRoutingModule } from './partner-routing.module';
@@ -56,6 +57,7 @@ import { MyCommissionsComponent } from './my-commissions/my-commissions.componen
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatPaginatorModule,
   ],
 })
 export class PartnerModule {}

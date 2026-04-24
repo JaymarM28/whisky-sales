@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SaleService } from '../../../core/services/sale.service';
@@ -15,7 +16,11 @@ import { environment } from '../../../../environments/environment';
 export class SalesComponent implements OnInit {
   ventas: Sale[] = [];
   cargando = true;
+  totalItems = 0;
+  pageSize = 20;
+  currentPage = 1;
   columnas = ['fecha', 'socio', 'producto', 'cantidad', 'estado', 'comprobante', 'acciones'];
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private saleService: SaleService,
@@ -27,11 +32,18 @@ export class SalesComponent implements OnInit {
     this.cargarVentas();
   }
 
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex + 1;
+    this.pageSize = event.pageSize;
+    this.cargarVentas();
+  }
+
   cargarVentas(): void {
     this.cargando = true;
-    this.saleService.getAll().subscribe({
+    this.saleService.getAll(this.currentPage, this.pageSize).subscribe({
       next: (res) => {
         this.ventas = res.data;
+        this.totalItems = res.total ?? 0;
         this.cargando = false;
       },
       error: () => {

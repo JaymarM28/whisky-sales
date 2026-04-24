@@ -17,6 +17,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import { OwnerRoutingModule } from './owner-routing.module';
@@ -82,6 +83,7 @@ import { ReportsComponent } from './reports/reports.component';
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatTabsModule,
+    MatPaginatorModule,
   ],
 })
 export class OwnerModule {}

@@ -18,12 +18,14 @@ type ProductFields = {
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(tenantId: string) {
-    const products = await this.prisma.product.findMany({
-      where: { tenantId },
-      orderBy: { name: 'asc' },
-    });
-    return { data: products, error: null, message: null };
+  async findAll(tenantId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const where = { tenantId };
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({ where, orderBy: { name: 'asc' }, skip, take: limit }),
+      this.prisma.product.count({ where }),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit), error: null, message: null };
   }
 
   async create(dto: CreateProductDto, tenantId: string) {

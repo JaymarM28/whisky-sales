@@ -1,0 +1,8 @@
+<div class="skeleton-table">
+  <div class="skeleton-header">
+    <div *ngFor="let c of columnsArray" class="skeleton-cell skeleton-header-cell"></div>
+  </div>
+  <div *ngFor="let r of rowsArray" class="skeleton-row">
+    <div *ngFor="let c of columnsArray" class="skeleton-cell"></div>
+  </div>
+</div>

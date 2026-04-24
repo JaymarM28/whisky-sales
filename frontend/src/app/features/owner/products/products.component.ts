@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProductService } from '../../../core/services/product.service';
@@ -14,7 +15,11 @@ import { ProductFormDialogComponent } from './product-form-dialog/product-form-d
 export class ProductsComponent implements OnInit {
   productos: Product[] = [];
   cargando = true;
+  totalItems = 0;
+  pageSize = 20;
+  currentPage = 1;
   columnas = ['nombre', 'referencia', 'costo', 'precioSocio', 'precio', 'margen', 'estado', 'acciones'];
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private productService: ProductService,
@@ -26,11 +31,18 @@ export class ProductsComponent implements OnInit {
     this.cargarProductos();
   }
 
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex + 1;
+    this.pageSize = event.pageSize;
+    this.cargarProductos();
+  }
+
   cargarProductos(): void {
     this.cargando = true;
-    this.productService.getAll().subscribe({
+    this.productService.getAll(this.currentPage, this.pageSize).subscribe({
       next: (res) => {
         this.productos = res.data;
+        this.totalItems = res.total ?? 0;
         this.cargando = false;
       },
       error: () => {

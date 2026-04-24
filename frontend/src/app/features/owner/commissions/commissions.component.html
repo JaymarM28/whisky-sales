@@ -12,9 +12,7 @@
       <mat-card-title>Historial de pagos</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div *ngIf="cargando" class="loading-container">
-        <mat-spinner diameter="36"></mat-spinner>
-      </div>
+      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="5"></app-skeleton-table>
 
       <div *ngIf="!cargando" class="table-container">
         <table mat-table [dataSource]="pagos">
@@ -53,7 +51,17 @@
           <tr mat-row *matRowDef="let row; columns: columnasPagos"></tr>
         </table>
 
-        <p *ngIf="pagos.length === 0" class="empty-state">No hay pagos registrados</p>
+        <mat-paginator
+          *ngIf="totalItems > pageSize"
+          [length]="totalItems"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 20, 50]"
+          [pageIndex]="currentPage - 1"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+
+        <p *ngIf="pagos.length === 0 && !cargando" class="empty-state">No hay pagos registrados</p>
       </div>
     </mat-card-content>
   </mat-card>

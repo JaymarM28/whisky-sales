@@ -5,9 +5,11 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CommissionsService } from './commissions.service';
 import { CreateCommissionDto } from './dto/create-commission.dto';
@@ -24,8 +26,8 @@ export class CommissionsController {
 
   @ApiOperation({ summary: 'Listar pagos (OWNER: todos | PARTNER: los suyos)' })
   @Get()
-  findAll(@Request() req) {
-    return this.commissionsService.findAll(req.user.id, req.user.role, req.user.tenantId);
+  findAll(@Request() req, @Query() pagination: PaginationDto) {
+    return this.commissionsService.findAll(req.user.id, req.user.role, req.user.tenantId, pagination.page, pagination.limit);
   }
 
   @ApiOperation({ summary: 'Comisión pendiente de un socio (solo OWNER)' })

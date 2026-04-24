@@ -11,8 +11,8 @@ export class DeliveryService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(partnerId?: string, productId?: string): Observable<ApiResponse<Delivery[]>> {
-    let params = new HttpParams();
+  getAll(partnerId?: string, productId?: string, page = 1, limit = 20): Observable<ApiResponse<Delivery[]>> {
+    let params = new HttpParams().set('page', page).set('limit', limit);
     if (partnerId) params = params.set('partnerId', partnerId);
     if (productId) params = params.set('productId', productId);
     return this.http.get<ApiResponse<Delivery[]>>(this.apiUrl, { params });

@@ -6,9 +6,11 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -27,8 +29,8 @@ export class ProductsController {
 
   @ApiOperation({ summary: 'Listar todos los productos' })
   @Get()
-  findAll(@Request() req) {
-    return this.productsService.findAll(req.user.tenantId);
+  findAll(@Request() req, @Query() pagination: PaginationDto) {
+    return this.productsService.findAll(req.user.tenantId, pagination.page, pagination.limit);
   }
 
   @ApiOperation({ summary: 'Crear nuevo producto' })

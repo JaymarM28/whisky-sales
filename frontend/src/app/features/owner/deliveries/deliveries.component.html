@@ -36,9 +36,7 @@
 
   <mat-card>
     <mat-card-content>
-      <div *ngIf="cargando" class="loading-container">
-        <mat-spinner diameter="36"></mat-spinner>
-      </div>
+      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="6"></app-skeleton-table>
 
       <div *ngIf="!cargando" class="table-container">
         <table mat-table [dataSource]="entregas">
@@ -80,7 +78,17 @@
           <tr mat-row *matRowDef="let row; columns: columnas"></tr>
         </table>
 
-        <p *ngIf="entregas.length === 0" class="empty-state">No hay entregas registradas</p>
+        <mat-paginator
+          *ngIf="totalItems > pageSize"
+          [length]="totalItems"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 20, 50]"
+          [pageIndex]="currentPage - 1"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+
+        <p *ngIf="entregas.length === 0 && !cargando" class="empty-state">No hay entregas registradas</p>
       </div>
     </mat-card-content>
   </mat-card>

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DeliveryService } from '../../../core/services/delivery.service';
@@ -20,10 +21,13 @@ export class DeliveriesComponent implements OnInit {
   socios: User[] = [];
   productos: Product[] = [];
   cargando = true;
+  totalItems = 0;
+  pageSize = 20;
+  currentPage = 1;
   columnas = ['fecha', 'socio', 'producto', 'cantidad', 'notas', 'acciones'];
-
   filtroSocio = '';
   filtroProducto = '';
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private deliveryService: DeliveryService,
@@ -35,17 +39,24 @@ export class DeliveriesComponent implements OnInit {
 
   ngOnInit(): void {
     this.userService.getAll().subscribe((res) => (this.socios = res.data.filter((u) => u.active && u.role === 'PARTNER')));
-    this.productService.getAll().subscribe((res) => (this.productos = res.data.filter((p) => p.active)));
+    this.productService.getAll(1, 100).subscribe((res) => (this.productos = res.data.filter((p) => p.active)));
+    this.cargarEntregas();
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex + 1;
+    this.pageSize = event.pageSize;
     this.cargarEntregas();
   }
 
   cargarEntregas(): void {
     this.cargando = true;
     this.deliveryService
-      .getAll(this.filtroSocio || undefined, this.filtroProducto || undefined)
+      .getAll(this.filtroSocio || undefined, this.filtroProducto || undefined, this.currentPage, this.pageSize)
       .subscribe({
         next: (res) => {
           this.entregas = res.data;
+          this.totalItems = res.total ?? 0;
           this.cargando = false;
         },
         error: () => {
@@ -90,6 +101,7 @@ export class DeliveriesComponent implements OnInit {
   limpiarFiltros(): void {
     this.filtroSocio = '';
     this.filtroProducto = '';
+    this.currentPage = 1;
     this.cargarEntregas();
   }
 }

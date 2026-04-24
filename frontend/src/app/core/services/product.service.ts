@@ -11,8 +11,8 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ApiResponse<Product[]>> {
-    return this.http.get<ApiResponse<Product[]>>(this.apiUrl);
+  getAll(page = 1, limit = 20): Observable<ApiResponse<Product[]>> {
+    return this.http.get<ApiResponse<Product[]>>(this.apiUrl, { params: { page, limit } });
   }
 
   create(data: { name: string; reference: string; costPrice: number; salePrice: number }): Observable<ApiResponse<Product>> {

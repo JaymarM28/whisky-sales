@@ -6,20 +6,18 @@ import { CreateDeliveryDto } from './dto/create-delivery.dto';
 export class DeliveriesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(tenantId: string, partnerId?: string, productId?: string) {
-    const deliveries = await this.prisma.delivery.findMany({
-      where: {
-        tenantId,
-        ...(partnerId && { partnerId }),
-        ...(productId && { productId }),
-      },
-      include: {
-        partner: { select: { id: true, name: true } },
-        product: { select: { id: true, name: true, reference: true } },
-      },
-      orderBy: { date: 'desc' },
-    });
-    return { data: deliveries, error: null, message: null };
+  async findAll(tenantId: string, partnerId?: string, productId?: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const where = { tenantId, ...(partnerId && { partnerId }), ...(productId && { productId }) };
+    const include = {
+      partner: { select: { id: true, name: true } },
+      product: { select: { id: true, name: true, reference: true } },
+    };
+    const [data, total] = await Promise.all([
+      this.prisma.delivery.findMany({ where, include, orderBy: { date: 'desc' }, skip, take: limit }),
+      this.prisma.delivery.count({ where }),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit), error: null, message: null };
   }
 
   async create(dto: CreateDeliveryDto, tenantId: string) {

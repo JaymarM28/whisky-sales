@@ -11,17 +11,18 @@ import { UpdateSaleStatusDto } from './dto/update-sale-status.dto';
 export class SalesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(userId: string, role: string, tenantId: string) {
+  async findAll(userId: string, role: string, tenantId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
     const where = role === 'PARTNER' ? { partnerId: userId, tenantId } : { tenantId };
-    const sales = await this.prisma.sale.findMany({
-      where,
-      include: {
-        partner: { select: { id: true, name: true } },
-        product: { select: { id: true, name: true, reference: true, salePrice: true, costPrice: true } },
-      },
-      orderBy: { date: 'desc' },
-    });
-    return { data: sales, error: null, message: null };
+    const include = {
+      partner: { select: { id: true, name: true } },
+      product: { select: { id: true, name: true, reference: true, salePrice: true, costPrice: true } },
+    };
+    const [data, total] = await Promise.all([
+      this.prisma.sale.findMany({ where, include, orderBy: { date: 'desc' }, skip, take: limit }),
+      this.prisma.sale.count({ where }),
+    ]);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit), error: null, message: null };
   }
 
   async create(dto: CreateSaleDto, partnerId: string, tenantId: string, receiptImage?: string) {
