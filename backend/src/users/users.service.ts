@@ -85,10 +85,12 @@ export class UsersService {
       });
       return { data: user, error: null, message: 'Socio creado exitosamente' };
     } catch (err: any) {
-      if (err?.code === 'P2002') {
-        throw new ConflictException('Ya existe un usuario con esa cédula');
+      const code = err?.code ?? '';
+      const msg: string = err?.message ?? '';
+      if (code === 'P2002' || msg.includes('Unique constraint')) {
+        throw new ConflictException('Ya existe un usuario registrado con esa cédula');
       }
-      if (err?.code === 'P2003') {
+      if (code === 'P2003' || msg.includes('Foreign key constraint')) {
         throw new NotFoundException('El negocio seleccionado no existe');
       }
       throw err;
