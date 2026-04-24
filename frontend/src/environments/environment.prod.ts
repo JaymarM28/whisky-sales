@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-backend.railway.app/api',
+  apiUrl: 'https://whisky-sales-production.up.railway.app/api',
 };
