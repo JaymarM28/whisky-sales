@@ -3,7 +3,7 @@
   <mat-sidenav
     #sidenav
     [mode]="isMobile ? 'over' : 'side'"
-    [opened]="sidenavAbierto"
+    [opened]="!isMobile"
     class="sidenav"
   >
     <div class="sidenav-brand">

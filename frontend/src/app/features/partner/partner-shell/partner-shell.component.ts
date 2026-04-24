@@ -1,6 +1,7 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, ViewChild, AfterViewInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { MatSidenav } from '@angular/material/sidenav';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -8,7 +9,9 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './partner-shell.component.html',
   styleUrls: ['./partner-shell.component.css'],
 })
-export class PartnerShellComponent {
+export class PartnerShellComponent implements AfterViewInit {
+  @ViewChild('sidenav') sidenav!: MatSidenav;
+
   navItems = [
     { label: 'Dashboard',      icon: 'dashboard',     route: '/partner/dashboard' },
     { label: 'Mis ventas',     icon: 'point_of_sale',  route: '/partner/my-sales' },
@@ -17,7 +20,6 @@ export class PartnerShellComponent {
 
   paginaActual = 'Dashboard';
   isMobile = window.innerWidth < 768;
-  sidenavAbierto = !this.isMobile;
 
   private titulos: Record<string, string> = {
     '/partner/dashboard':      'Dashboard',
@@ -30,14 +32,25 @@ export class PartnerShellComponent {
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: any) => {
         this.paginaActual = this.titulos[e.urlAfterRedirects] || 'J&L Liquors';
-        if (this.isMobile) this.sidenavAbierto = false;
+      });
+  }
+
+  ngAfterViewInit(): void {
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe(() => {
+        if (this.isMobile) this.sidenav.close();
       });
   }
 
   @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth < 768;
-    this.sidenavAbierto = !this.isMobile;
+    if (this.isMobile) {
+      this.sidenav.close();
+    } else {
+      this.sidenav.open();
+    }
   }
 
   cerrarSesion(): void {

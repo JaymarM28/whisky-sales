@@ -1,5 +1,7 @@
 .sidenav-container {
   height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* ─── Sidebar ─────────────────────────────────── */
@@ -115,6 +117,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .menu-btn {
@@ -168,6 +172,7 @@
 .page-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ─── Responsive ──────────────────────────────── */
