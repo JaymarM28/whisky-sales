@@ -1,5 +1,6 @@
+/* ── Comisión banner ── */
 .comision-banner {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .comision-card {
@@ -22,6 +23,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .comision-icon mat-icon {
@@ -55,16 +57,104 @@
   margin-top: 4px;
 }
 
-h2 {
-  font-size: 18px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.7);
-  margin-bottom: 16px;
+/* ── Section labels ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
 }
 
+.mb-24 { margin-bottom: 24px; }
+
+/* ── KPI grid ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.kpi-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.kpi-card mat-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px !important;
+}
+
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.kpi-icon.pending   { background: #FFF3E0; }
+.kpi-icon.pending mat-icon { color: #BF6900; }
+
+.kpi-icon.confirmed { background: #E8F5E9; }
+.kpi-icon.confirmed mat-icon { color: #2E7D32; }
+
+.kpi-icon.rendimiento { background: #E3F2FD; }
+.kpi-icon.rendimiento mat-icon { color: #1565C0; }
+
+.kpi-icon.ingresos  { background: #F3E5F5; }
+.kpi-icon.ingresos mat-icon { color: #6A1B9A; }
+
+.kpi-icon.negocio   { background: #EDE7F6; }
+.kpi-icon.negocio mat-icon { color: #4527A0; }
+
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-ingresos .kpi-value {
+  color: #6A1B9A;
+}
+
+.kpi-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.kpi-hint {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.38);
+  margin-top: 2px;
+}
+
+/* ── Inventario ── */
 .inventario-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 16px;
 }
 
@@ -75,6 +165,10 @@ h2 {
   text-align: center;
   padding: 24px 16px !important;
   gap: 6px;
+}
+
+.inventario-bajo {
+  border: 2px solid #FFCDD2 !important;
 }
 
 .inventario-icon {
@@ -89,7 +183,7 @@ h2 {
 }
 
 .inventario-icon mat-icon {
-  color: var(--brand-gold, #C9963A);
+  color: var(--brand-gold);
   font-size: 28px;
   width: 28px;
   height: 28px;
@@ -97,33 +191,64 @@ h2 {
 
 .inventario-nombre {
   font-weight: 600;
-  font-size: 14px;
-  color: var(--text-primary, #1A1208);
+  font-size: 13px;
+  color: var(--text-primary);
   line-height: 1.3;
 }
 
 .inventario-cantidad {
   font-size: 32px;
   font-weight: 700;
-  color: var(--brand-gold, #C9963A);
+  color: var(--brand-gold);
   line-height: 1;
 }
 
 .inventario-unidad {
   font-size: 11px;
-  color: var(--text-muted, #6B6259);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
+.inventario-alerta {
+  font-size: 11px;
+  font-weight: 600;
+  color: #C62828;
+  background: #FFEBEE;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 2px;
+}
+
+/* ── Empty state ── */
 .empty-state {
   text-align: center;
-  padding: 48px;
+  padding: 40px;
   color: rgba(0, 0, 0, 0.4);
+  font-size: 14px;
 }
 
 .empty-state mat-icon {
   font-size: 48px;
   width: 48px;
   height: 48px;
+  display: block;
+  margin: 0 auto 12px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .comision-card mat-card-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .comision-valor {
+    font-size: 26px;
+  }
+
+  .kpi-value {
+    font-size: 18px;
+  }
 }

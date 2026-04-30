@@ -53,6 +53,34 @@
 
     </div>
 
+    <!-- ── Ingresos por tipo de cliente ── -->
+    <p class="section-label">Ingresos por tipo de cliente</p>
+    <div class="kpi-grid kpi-grid-2 mb-24">
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <div class="kpi-icon confirmed"><mat-icon>person</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ resumen.ventasPorTipo?.consumidor?.ingresos | copCurrency }}</span>
+            <span class="kpi-label">Consumidor final</span>
+            <span class="kpi-hint">{{ resumen.ventasPorTipo?.consumidor?.count }} ventas confirmadas</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <div class="kpi-icon commission-gen"><mat-icon>business</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ resumen.ventasPorTipo?.negocio?.ingresos | copCurrency }}</span>
+            <span class="kpi-label">Negocio / Mayorista</span>
+            <span class="kpi-hint">{{ resumen.ventasPorTipo?.negocio?.count }} ventas confirmadas</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
     <!-- ── Ganancias ── -->
     <p class="section-label">Ganancias <span class="section-badge">Costo real 🔒</span></p>
     <mat-card class="ganancia-card mb-24">

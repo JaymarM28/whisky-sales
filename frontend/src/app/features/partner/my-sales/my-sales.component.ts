@@ -17,7 +17,7 @@ export class MySalesComponent implements OnInit {
   totalItems = 0;
   pageSize = 20;
   currentPage = 1;
-  columnas = ['fecha', 'producto', 'cantidad', 'estado', 'notas'];
+  columnas = ['fecha', 'producto', 'cantidad', 'cliente', 'estado', 'notas'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(

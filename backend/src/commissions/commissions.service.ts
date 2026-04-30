@@ -50,7 +50,11 @@ export class CommissionsService {
     });
 
     const generada = ventas.reduce((acc, sale) => {
-      const margenSocio = (sale.product.salePrice - sale.product.partnerPrice) * sale.quantity;
+      const precioVenta = (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
+        ? sale.businessPriceSnapshot
+        : (sale.salePriceSnapshot ?? sale.product.salePrice);
+      const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
+      const margenSocio = (precioVenta - precioSocio) * sale.quantity;
       return acc + margenSocio * (partner.commissionPct / 100);
     }, 0);
 

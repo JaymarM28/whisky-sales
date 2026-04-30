@@ -8,7 +8,7 @@
 
   <mat-card>
     <mat-card-content>
-      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="7"></app-skeleton-table>
+      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="8"></app-skeleton-table>
 
       <div *ngIf="!cargando" class="table-container">
         <table mat-table [dataSource]="ventas">
@@ -30,6 +30,15 @@
           <ng-container matColumnDef="cantidad">
             <th mat-header-cell *matHeaderCellDef>Cantidad</th>
             <td mat-cell *matCellDef="let row">{{ row.quantity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="cliente">
+            <th mat-header-cell *matHeaderCellDef>Cliente</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-chip [class]="row.clientType === 'BUSINESS' ? 'chip-negocio' : 'chip-consumidor'">
+                {{ row.clientType === 'BUSINESS' ? 'Negocio' : 'Consumidor' }}
+              </mat-chip>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="estado">
@@ -61,20 +70,21 @@
               <button
                 mat-icon-button
                 color="primary"
-                [disabled]="row.status !== 'PENDING'"
+                [disabled]="row.status !== 'PENDING' || procesando.has(row.id)"
                 (click)="cambiarEstado(row, 'CONFIRMED')"
                 matTooltip="Confirmar"
               >
-                <mat-icon>check_circle</mat-icon>
+                <mat-spinner *ngIf="procesando.has(row.id)" diameter="18"></mat-spinner>
+                <mat-icon *ngIf="!procesando.has(row.id)">check_circle</mat-icon>
               </button>
               <button
                 mat-icon-button
                 color="warn"
-                [disabled]="row.status !== 'PENDING'"
+                [disabled]="row.status !== 'PENDING' || procesando.has(row.id)"
                 (click)="cambiarEstado(row, 'REJECTED')"
                 matTooltip="Rechazar"
               >
-                <mat-icon>cancel</mat-icon>
+                <mat-icon *ngIf="!procesando.has(row.id)">cancel</mat-icon>
               </button>
               <button
                 mat-icon-button

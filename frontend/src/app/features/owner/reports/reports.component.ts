@@ -20,6 +20,7 @@ export class ReportsComponent implements OnInit {
   columnasPorProducto = ['nombre', 'totalUnidades', 'totalIngresos', 'totalGanancia'];
   columnasPorSocio = ['nombre', 'totalUnidades', 'totalIngresos'];
   columnasPorMes = ['mes', 'totalUnidades', 'totalIngresos', 'totalGanancia'];
+  columnasPorTipo = ['label', 'totalVentas', 'totalUnidades', 'totalIngresos', 'totalGanancia'];
 
   // Socios
   socios: any[] = [];

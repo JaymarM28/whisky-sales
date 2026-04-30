@@ -78,6 +78,16 @@ table { width: 100%; }
   color: #C62828 !important;
   font-weight: 500 !important;
 }
+.chip-consumidor {
+  background-color: #E3F2FD !important;
+  color: #1565C0 !important;
+  font-weight: 500 !important;
+}
+.chip-negocio {
+  background-color: #F3E5F5 !important;
+  color: #6A1B9A !important;
+  font-weight: 500 !important;
+}
 
 /* ── Estados vacíos / carga ── */
 .loading-container {

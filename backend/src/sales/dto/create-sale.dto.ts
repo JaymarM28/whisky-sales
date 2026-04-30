@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt, IsPositive, IsDateString, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, IsPositive, IsDateString, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -17,6 +17,11 @@ export class CreateSaleDto {
   @ApiProperty({ example: '2026-04-08', description: 'Fecha de la venta (ISO 8601)' })
   @IsDateString()
   date: string;
+
+  @ApiPropertyOptional({ enum: ['CONSUMER', 'BUSINESS'], default: 'CONSUMER' })
+  @IsEnum(['CONSUMER', 'BUSINESS'])
+  @IsOptional()
+  clientType?: 'CONSUMER' | 'BUSINESS';
 
   @ApiPropertyOptional({ example: 'Venta a cliente VIP' })
   @IsString()

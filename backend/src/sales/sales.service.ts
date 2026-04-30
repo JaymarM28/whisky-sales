@@ -47,6 +47,8 @@ export class SalesService {
       );
     }
 
+    const clientType = dto.clientType ?? 'CONSUMER';
+
     const sale = await this.prisma.sale.create({
       data: {
         tenantId,
@@ -57,9 +59,11 @@ export class SalesService {
         notes: dto.notes,
         receiptImage,
         status: 'PENDING',
+        clientType,
         costPriceSnapshot: product.costPrice,
         salePriceSnapshot: product.salePrice,
         partnerPriceSnapshot: product.partnerPrice,
+        businessPriceSnapshot: product.businessPrice,
       },
       include: {
         partner: { select: { id: true, name: true } },

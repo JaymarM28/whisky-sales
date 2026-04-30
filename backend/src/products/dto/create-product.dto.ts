@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt, IsPositive, IsOptional, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, IsPositive, IsOptional, Min, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductDto {
@@ -38,4 +38,10 @@ export class CreateProductDto {
   @IsInt()
   @IsPositive()
   salePrice: number;
+
+  @ApiProperty({ example: 160000, description: 'Precio para clientes negocio/mayorista (0 = no aplica)', required: false })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  businessPrice?: number;
 }

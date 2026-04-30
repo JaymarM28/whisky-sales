@@ -11,7 +11,7 @@ export class ReportsService {
       include: {
         sales: {
           where: { status: 'CONFIRMED' },
-          select: { quantity: true, costPriceSnapshot: true, salePriceSnapshot: true },
+          select: { quantity: true, costPriceSnapshot: true, salePriceSnapshot: true, clientType: true, businessPriceSnapshot: true },
         },
       },
       orderBy: { name: 'asc' },
@@ -22,7 +22,9 @@ export class ReportsService {
       const gananciaPorUnidad = p.salePrice - p.costPrice;
       const gananciaTotal = p.sales.reduce((acc, s) => {
         const costo = s.costPriceSnapshot ?? p.costPrice;
-        const precio = s.salePriceSnapshot ?? p.salePrice;
+        const precio = (s.clientType === 'BUSINESS' && s.businessPriceSnapshot)
+          ? s.businessPriceSnapshot
+          : (s.salePriceSnapshot ?? p.salePrice);
         return acc + (precio - costo) * s.quantity;
       }, 0);
       const margenPct = p.costPrice > 0 ? (gananciaPorUnidad / p.costPrice) * 100 : 0;
@@ -71,8 +73,11 @@ export class ReportsService {
       orderBy: { date: 'desc' },
     });
 
-    const precioVenta = (v: any) => v.salePriceSnapshot ?? v.product.salePrice;
-    const precioCosto = (v: any) => v.costPriceSnapshot ?? v.product.costPrice;
+    const precioVenta = (v: any): number =>
+      (v.clientType === 'BUSINESS' && v.businessPriceSnapshot)
+        ? v.businessPriceSnapshot
+        : (v.salePriceSnapshot ?? v.product.salePrice);
+    const precioCosto = (v: any): number => v.costPriceSnapshot ?? v.product.costPrice;
 
     // Por producto
     const porProductoMap = new Map<string, any>();
@@ -112,6 +117,19 @@ export class ReportsService {
       entry.totalGanancia += v.quantity * (precioVenta(v) - precioCosto(v));
     }
 
+    // Por tipo de cliente
+    const porTipoCliente = [
+      { tipo: 'CONSUMER', label: 'Consumidor final', totalVentas: 0, totalUnidades: 0, totalIngresos: 0, totalGanancia: 0 },
+      { tipo: 'BUSINESS', label: 'Negocio / Mayorista', totalVentas: 0, totalUnidades: 0, totalIngresos: 0, totalGanancia: 0 },
+    ];
+    for (const v of ventas) {
+      const idx = (v.clientType === 'BUSINESS') ? 1 : 0;
+      porTipoCliente[idx].totalVentas += 1;
+      porTipoCliente[idx].totalUnidades += v.quantity;
+      porTipoCliente[idx].totalIngresos += v.quantity * precioVenta(v);
+      porTipoCliente[idx].totalGanancia += v.quantity * (precioVenta(v) - precioCosto(v));
+    }
+
     return {
       data: {
         totalVentas: ventas.length,
@@ -123,6 +141,7 @@ export class ReportsService {
         porMes: Array.from(porMesMap.entries())
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([, v]) => v),
+        porTipoCliente,
       },
       error: null,
       message: null,
@@ -158,7 +177,9 @@ export class ReportsService {
         });
 
         const comisionGenerada = ventasConf.reduce((acc, sale) => {
-          const precio = sale.salePriceSnapshot ?? sale.product.salePrice;
+          const precio = (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
+            ? sale.businessPriceSnapshot
+            : (sale.salePriceSnapshot ?? sale.product.salePrice);
           const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
           const margen = (precio - precioSocio) * sale.quantity;
           return acc + margen * (partner.commissionPct / 100);

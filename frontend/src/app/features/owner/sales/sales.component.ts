@@ -16,10 +16,11 @@ import { environment } from '../../../../environments/environment';
 export class SalesComponent implements OnInit {
   ventas: Sale[] = [];
   cargando = true;
+  procesando = new Set<string>();
   totalItems = 0;
   pageSize = 20;
   currentPage = 1;
-  columnas = ['fecha', 'socio', 'producto', 'cantidad', 'estado', 'comprobante', 'acciones'];
+  columnas = ['fecha', 'socio', 'producto', 'cantidad', 'cliente', 'estado', 'comprobante', 'acciones'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
@@ -54,8 +55,10 @@ export class SalesComponent implements OnInit {
   }
 
   cambiarEstado(venta: Sale, status: 'CONFIRMED' | 'REJECTED'): void {
+    this.procesando.add(venta.id);
     this.saleService.updateStatus(venta.id, status).subscribe({
       next: () => {
+        this.procesando.delete(venta.id);
         this.snackBar.open(
           status === 'CONFIRMED' ? 'Venta confirmada' : 'Venta rechazada',
           'Cerrar',
@@ -64,6 +67,7 @@ export class SalesComponent implements OnInit {
         this.cargarVentas();
       },
       error: () => {
+        this.procesando.delete(venta.id);
         this.snackBar.open('Error al actualizar estado', 'Cerrar', { duration: 3000 });
       },
     });

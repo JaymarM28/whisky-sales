@@ -9,7 +9,7 @@
 
   <mat-card>
     <mat-card-content>
-      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="8"></app-skeleton-table>
+      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="9"></app-skeleton-table>
 
       <div *ngIf="!cargando" class="table-container">
         <table mat-table [dataSource]="productos">
@@ -38,6 +38,13 @@
           <ng-container matColumnDef="precio">
             <th mat-header-cell *matHeaderCellDef>Precio venta</th>
             <td mat-cell *matCellDef="let row">{{ row.salePrice | copCurrency }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="precioNegocio">
+            <th mat-header-cell *matHeaderCellDef>P. negocio</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.businessPrice > 0 ? (row.businessPrice | copCurrency) : '—' }}
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="margen">

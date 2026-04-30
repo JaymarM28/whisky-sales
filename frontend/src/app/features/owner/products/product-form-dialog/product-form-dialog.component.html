@@ -61,7 +61,15 @@
       <mat-label>Precio de venta por botella (COP)</mat-label>
       <input matInput type="number" formControlName="salePrice" min="1" />
       <mat-icon matPrefix>storefront</mat-icon>
+      <mat-hint>Precio para consumidor final</mat-hint>
       <mat-error>El precio de venta es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Precio negocio / mayorista (COP)</mat-label>
+      <input matInput type="number" formControlName="businessPrice" min="0" />
+      <mat-icon matPrefix>business</mat-icon>
+      <mat-hint>Precio especial para clientes negocio (dejar en 0 si no aplica)</mat-hint>
     </mat-form-field>
 
   </form>

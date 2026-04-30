@@ -8,6 +8,25 @@ mat-form-field {
   margin-bottom: 8px;
 }
 
+.precio-efectivo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f3f8f3;
+  border: 1px solid #c8e6c9;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #2e7d32;
+}
+
+.precio-efectivo mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
 .upload-section {
   margin-top: 8px;
 }

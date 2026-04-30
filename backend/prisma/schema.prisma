@@ -53,10 +53,11 @@ model Product {
   reference    String
   unitsPerBox  Int?
   boxCost      Int?
-  costPrice    Int
-  partnerPrice Int      @default(0)
-  salePrice    Int
-  active       Boolean  @default(true)
+  costPrice     Int
+  partnerPrice  Int     @default(0)
+  salePrice     Int
+  businessPrice Int     @default(0)
+  active        Boolean @default(true)
   createdAt    DateTime @default(now())
 
   deliveries Delivery[]
@@ -91,17 +92,24 @@ model Sale {
   date                 DateTime
   receiptImage         String?
   notes                String?
-  status               SaleStatus @default(PENDING)
-  costPriceSnapshot    Int?
-  salePriceSnapshot    Int?
-  partnerPriceSnapshot Int?
-  createdAt            DateTime   @default(now())
+  status                  SaleStatus @default(PENDING)
+  clientType              ClientType @default(CONSUMER)
+  costPriceSnapshot       Int?
+  salePriceSnapshot       Int?
+  partnerPriceSnapshot    Int?
+  businessPriceSnapshot   Int?
+  createdAt               DateTime   @default(now())
 }
 
 enum SaleStatus {
   PENDING
   CONFIRMED
   REJECTED
+}
+
+enum ClientType {
+  CONSUMER
+  BUSINESS
 }
 
 model CommissionPayment {

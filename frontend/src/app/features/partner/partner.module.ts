@@ -26,6 +26,7 @@ import { PartnerDashboardComponent } from './dashboard/partner-dashboard.compone
 import { MySalesComponent } from './my-sales/my-sales.component';
 import { ReportSaleDialogComponent } from './my-sales/report-sale-dialog/report-sale-dialog.component';
 import { MyCommissionsComponent } from './my-commissions/my-commissions.component';
+import { PartnerSettingsComponent } from './settings/partner-settings.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import { MyCommissionsComponent } from './my-commissions/my-commissions.componen
     MySalesComponent,
     ReportSaleDialogComponent,
     MyCommissionsComponent,
+    PartnerSettingsComponent,
   ],
   imports: [
     CommonModule,

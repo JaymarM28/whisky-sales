@@ -97,6 +97,16 @@ export class UsersService {
     }
   }
 
+  async updateMyPin(id: string, pin: string) {
+    const pinHash = await bcrypt.hash(pin, 10);
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { pin: pinHash },
+      select: USER_SELECT,
+    });
+    return { data: user, error: null, message: 'PIN actualizado correctamente' };
+  }
+
   async update(id: string, dto: UpdateUserDto, tenantId: string) {
     const existing = await this.prisma.user.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('Socio no encontrado');

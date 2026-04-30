@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -48,6 +49,12 @@ export class UsersController {
       isAdmin: req.user.isAdmin,
       role: req.user.role,
     });
+  }
+
+  @ApiOperation({ summary: 'Cambiar PIN propio (cualquier usuario autenticado)' })
+  @Patch('me/pin')
+  updateMyPin(@Body('pin') pin: string, @Request() req) {
+    return this.usersService.updateMyPin(req.user.id, pin);
   }
 
   @ApiOperation({ summary: 'Editar socio' })

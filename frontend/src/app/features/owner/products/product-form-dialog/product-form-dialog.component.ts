@@ -34,6 +34,7 @@ export class ProductFormDialogComponent implements OnInit {
       costPrice: [this.data.producto?.costPrice || '', [Validators.required, Validators.min(1)]],
       partnerPrice: [this.data.producto?.partnerPrice || '', [Validators.required, Validators.min(1)]],
       salePrice: [this.data.producto?.salePrice || '', [Validators.required, Validators.min(1)]],
+      businessPrice: [this.data.producto?.businessPrice || 0, [Validators.min(0)]],
     });
 
     this.recalcularCosto();

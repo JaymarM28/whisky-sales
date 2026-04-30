@@ -28,6 +28,7 @@ export class ReportSaleDialogComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       productId: ['', Validators.required],
+      clientType: ['CONSUMER', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
       date: [new Date().toISOString().substring(0, 10), Validators.required],
       notes: [''],
@@ -85,6 +86,7 @@ export class ReportSaleDialogComponent implements OnInit {
     formData.append('productId', this.form.value.productId);
     formData.append('quantity', this.form.value.quantity.toString());
     formData.append('date', this.form.value.date);
+    formData.append('clientType', this.form.value.clientType);
     if (this.form.value.notes) formData.append('notes', this.form.value.notes);
     if (this.archivoSeleccionado) formData.append('receiptImage', this.archivoSeleccionado);
 
@@ -108,5 +110,23 @@ export class ReportSaleDialogComponent implements OnInit {
     const productId = this.form.value.productId;
     const item = this.inventario.find((i: any) => i.product.id === productId);
     return item?.available || 0;
+  }
+
+  getProductoSeleccionado(): any {
+    const productId = this.form.value.productId;
+    return this.inventario.find((i: any) => i.product.id === productId)?.product || null;
+  }
+
+  getPrecioEfectivo(): number | null {
+    const producto = this.getProductoSeleccionado();
+    if (!producto) return null;
+    const clientType = this.form.value.clientType;
+    if (clientType === 'BUSINESS' && producto.businessPrice > 0) return producto.businessPrice;
+    return producto.salePrice;
+  }
+
+  tieneNegocio(): boolean {
+    const producto = this.getProductoSeleccionado();
+    return !!producto && producto.businessPrice > 0;
   }
 }

@@ -1,0 +1,27 @@
+.page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-card {
+  max-width: 480px;
+}
+
+mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+mat-form-field {
+  width: 100%;
+  max-width: 320px;
+}

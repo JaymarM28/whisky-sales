@@ -16,6 +16,21 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Tipo de cliente</mat-label>
+      <mat-select formControlName="clientType">
+        <mat-option value="CONSUMER">Consumidor final</mat-option>
+        <mat-option value="BUSINESS" [disabled]="!tieneNegocio()">
+          Negocio / Mayorista {{ !tieneNegocio() ? '(no configurado)' : '' }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div *ngIf="getPrecioEfectivo() !== null" class="precio-efectivo">
+      <mat-icon>sell</mat-icon>
+      <span>Precio unitario: <strong>{{ getPrecioEfectivo() | currency:'COP':'symbol':'1.0-0' }}</strong></span>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Cantidad</mat-label>
       <input
         matInput

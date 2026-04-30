@@ -18,7 +18,7 @@ export class ProductsComponent implements OnInit {
   totalItems = 0;
   pageSize = 20;
   currentPage = 1;
-  columnas = ['nombre', 'referencia', 'costo', 'precioSocio', 'precio', 'margen', 'estado', 'acciones'];
+  columnas = ['nombre', 'referencia', 'costo', 'precioSocio', 'precio', 'precioNegocio', 'margen', 'estado', 'acciones'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(

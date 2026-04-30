@@ -13,9 +13,10 @@ export class PartnerShellComponent implements AfterViewInit {
   @ViewChild('sidenav') sidenav!: MatSidenav;
 
   navItems = [
-    { label: 'Dashboard',      icon: 'dashboard',     route: '/partner/dashboard' },
+    { label: 'Dashboard',      icon: 'dashboard',      route: '/partner/dashboard' },
     { label: 'Mis ventas',     icon: 'point_of_sale',  route: '/partner/my-sales' },
     { label: 'Mis comisiones', icon: 'receipt_long',   route: '/partner/my-commissions' },
+    { label: 'Configuración',  icon: 'settings',       route: '/partner/settings' },
   ];
 
   paginaActual = 'Dashboard';
@@ -25,6 +26,7 @@ export class PartnerShellComponent implements AfterViewInit {
     '/partner/dashboard':      'Dashboard',
     '/partner/my-sales':       'Mis ventas',
     '/partner/my-commissions': 'Mis comisiones',
+    '/partner/settings':       'Configuración',
   };
 
   constructor(public authService: AuthService, private router: Router) {

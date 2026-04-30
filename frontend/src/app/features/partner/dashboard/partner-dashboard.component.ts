@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class PartnerDashboardComponent implements OnInit {
   resumen: any = null;
   cargando = true;
+  columnasUltimas = ['fecha', 'producto', 'cantidad', 'cliente', 'estado'];
 
   constructor(
     private dashboardService: DashboardService,
@@ -32,5 +33,15 @@ export class PartnerDashboardComponent implements OnInit {
         this.cargando = false;
       },
     });
+  }
+
+  getLabelEstado(status: string): string {
+    const labels: any = { PENDING: 'Pendiente', CONFIRMED: 'Confirmada', REJECTED: 'Rechazada' };
+    return labels[status] || status;
+  }
+
+  getChipClase(status: string): string {
+    const clases: any = { PENDING: 'chip-pendiente', CONFIRMED: 'chip-confirmada', REJECTED: 'chip-rechazada' };
+    return clases[status] || '';
   }
 }

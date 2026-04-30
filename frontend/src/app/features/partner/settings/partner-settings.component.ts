@@ -5,15 +5,14 @@ import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
-  selector: 'app-settings',
-  templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.css'],
+  selector: 'app-partner-settings',
+  templateUrl: './partner-settings.component.html',
+  styleUrls: ['./partner-settings.component.css'],
 })
-export class SettingsComponent {
+export class PartnerSettingsComponent {
   form: FormGroup;
   guardando = false;
   ocultarPin = true;
-  ocultarPinNuevo = true;
 
   constructor(
     private fb: FormBuilder,
