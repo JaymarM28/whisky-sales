@@ -6,13 +6,13 @@
   <form [formGroup]="form">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Nombre del negocio</mat-label>
-      <input matInput formControlName="name" placeholder="ej: J&L Liquors" />
+      <input matInput formControlName="name" placeholder="ej: JM Liquors" />
       <mat-error>El nombre es obligatorio</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Código (slug)</mat-label>
-      <input matInput formControlName="slug" placeholder="ej: jl-liquors" />
+      <input matInput formControlName="slug" placeholder="ej: jm-liquors" />
       <mat-hint>Solo letras minúsculas, números y guiones</mat-hint>
       <mat-error *ngIf="form.get('slug')?.hasError('required')">Obligatorio</mat-error>
       <mat-error *ngIf="form.get('slug')?.hasError('pattern')">

@@ -28,6 +28,7 @@ export class PartnerFormDialogComponent implements OnInit {
 
     this.form = this.fb.group({
       name: [this.data.socio?.name || '', [Validators.required]],
+      email: [this.data.socio?.email || '', [Validators.email]],
       cedula: [
         this.data.socio?.cedula || '',
         this.esEdicion ? [] : [Validators.required],
@@ -46,6 +47,7 @@ export class PartnerFormDialogComponent implements OnInit {
 
     const datos = this.form.value;
     if (!datos.pin) delete datos.pin;
+    if (!datos.email) delete datos.email;
 
     const accion = this.esEdicion
       ? this.userService.update(this.data.socio!.id, datos)

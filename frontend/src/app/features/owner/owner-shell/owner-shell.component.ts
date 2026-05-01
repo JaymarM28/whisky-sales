@@ -49,7 +49,7 @@ export class OwnerShellComponent implements AfterViewInit {
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: any) => {
-        this.paginaActual = this.titulos[e.urlAfterRedirects] || 'J&L Liquors';
+        this.paginaActual = this.titulos[e.urlAfterRedirects] || 'JM Liquors';
       });
   }
 

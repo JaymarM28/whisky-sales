@@ -4,12 +4,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleStatusDto } from './dto/update-sale-status.dto';
 
 @Injectable()
 export class SalesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mail: MailService,
+  ) {}
 
   async findAll(userId: string, role: string, tenantId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
@@ -70,6 +74,21 @@ export class SalesService {
         product: { select: { id: true, name: true, reference: true } },
       },
     });
+
+    const owner = await this.prisma.user.findFirst({
+      where: { tenantId, role: 'OWNER' },
+      select: { email: true },
+    });
+    if (owner?.email) {
+      void this.mail.notifyOwnerNewSale({
+        ownerEmail: owner.email,
+        partnerName: sale.partner.name,
+        productName: sale.product.name,
+        quantity: sale.quantity,
+        date: new Date(sale.date).toLocaleDateString('es-CO'),
+        notes: sale.notes ?? undefined,
+      });
+    }
 
     return { data: sale, error: null, message: 'Venta reportada exitosamente' };
   }

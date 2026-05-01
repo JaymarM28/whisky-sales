@@ -7,6 +7,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 const USER_SELECT = {
   id: true,
   name: true,
+  email: true,
   cedula: true,
   role: true,
   isAdmin: true,
@@ -61,6 +62,7 @@ export class UsersService {
           data: {
             tenantId: dto.tenantId,
             name: dto.name,
+            email: dto.email,
             cedula: dto.cedula,
             role: 'OWNER',
             pin: pinHash,
@@ -76,6 +78,7 @@ export class UsersService {
         data: {
           tenantId: requester.tenantId,
           name: dto.name,
+          email: dto.email,
           cedula: dto.cedula,
           role: 'PARTNER',
           pin: pinHash,

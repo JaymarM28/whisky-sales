@@ -2,7 +2,7 @@
  * Seed de migración a multi-tenant.
  *
  * Qué hace:
- * 1. Crea el tenant "J&L Liquors" con slug "jl-liquors" (si no existe).
+ * 1. Crea el tenant "JM Liquors" con slug "jm-liquors" (si no existe).
  * 2. Asigna todos los User, Product, Delivery, Sale y CommissionPayment
  *    que aún no tienen tenantId a ese tenant.
  * 3. Asigna cédula temporal a usuarios sin cédula.
@@ -18,11 +18,11 @@ async function main() {
   console.log('Iniciando seed de migración multi-tenant...\n');
 
   // ── 1. Crear (o recuperar) el tenant inicial ──────────────────────────────
-  let tenant = await prisma.tenant.findUnique({ where: { slug: 'jl-liquors' } });
+  let tenant = await prisma.tenant.findUnique({ where: { slug: 'jm-liquors' } });
 
   if (!tenant) {
     tenant = await prisma.tenant.create({
-      data: { name: 'J&L Liquors', slug: 'jl-liquors' },
+      data: { name: 'JM Liquors', slug: 'jm-liquors' },
     });
     console.log(`✓ Tenant creado: ${tenant.name} (${tenant.slug})`);
   } else {
@@ -78,7 +78,7 @@ async function main() {
 
   console.log('\n✅ Seed completado.');
   console.log('\n   Para hacer login:');
-  console.log('   - Código de negocio: jl-liquors');
+  console.log('   - Código de negocio: jm-liquors');
   console.log('   - Cédula: actualiza las temporales con: npx prisma studio');
   console.log('   - PIN: el que ya tenías configurado\n');
 }

@@ -12,6 +12,14 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Correo electrónico (opcional)</mat-label>
+      <input matInput formControlName="email" type="email" inputmode="email" />
+      <mat-icon matSuffix>email</mat-icon>
+      <mat-hint>Se usará para notificaciones de comisiones</mat-hint>
+      <mat-error *ngIf="form.get('email')?.hasError('email')">Correo inválido</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>{{ esEdicion ? 'Cédula (dejar vacío para no cambiar)' : 'Cédula' }}</mat-label>
       <input matInput formControlName="cedula" inputmode="numeric" />
       <mat-error *ngIf="form.get('cedula')?.hasError('required')">La cédula es obligatoria</mat-error>

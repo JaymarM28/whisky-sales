@@ -15,7 +15,7 @@ export class UserService {
     return this.http.get<ApiResponse<User[]>>(this.apiUrl);
   }
 
-  create(data: { name: string; cedula: string; pin: string; commissionPct?: number; role?: string; tenantId?: string }): Observable<ApiResponse<User>> {
+  create(data: { name: string; email?: string; cedula: string; pin: string; commissionPct?: number; role?: string; tenantId?: string }): Observable<ApiResponse<User>> {
     return this.http.post<ApiResponse<User>>(this.apiUrl, data);
   }
 
@@ -27,7 +27,7 @@ export class UserService {
     return this.http.patch<ApiResponse<User>>(`${this.apiUrl}/me/pin`, { pin });
   }
 
-  update(id: string, data: Partial<{ name: string; pin: string; commissionPct: number; active: boolean }>): Observable<ApiResponse<User>> {
+  update(id: string, data: Partial<{ name: string; email: string; pin: string; commissionPct: number; active: boolean }>): Observable<ApiResponse<User>> {
     return this.http.put<ApiResponse<User>>(`${this.apiUrl}/${id}`, data);
   }
 

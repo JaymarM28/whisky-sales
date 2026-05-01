@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { CreateCommissionDto } from './dto/create-commission.dto';
 
 @Injectable()
 export class CommissionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mail: MailService,
+  ) {}
 
   async findAll(userId: string, role: string, tenantId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
@@ -18,7 +22,10 @@ export class CommissionsService {
   }
 
   async create(dto: CreateCommissionDto, tenantId: string) {
-    const partner = await this.prisma.user.findFirst({ where: { id: dto.partnerId, tenantId } });
+    const partner = await this.prisma.user.findFirst({
+      where: { id: dto.partnerId, tenantId },
+      select: { name: true, email: true },
+    });
     if (!partner) throw new NotFoundException('Socio no encontrado');
 
     const payment = await this.prisma.commissionPayment.create({
@@ -33,6 +40,16 @@ export class CommissionsService {
         partner: { select: { id: true, name: true } },
       },
     });
+
+    if (partner.email) {
+      void this.mail.notifyPartnerCommission({
+        partnerEmail: partner.email,
+        partnerName: partner.name,
+        amount: payment.amount,
+        reference: payment.paymentReference ?? undefined,
+        date: new Date(payment.date).toLocaleDateString('es-CO'),
+      });
+    }
 
     return { data: payment, error: null, message: 'Pago de comisión registrado exitosamente' };
   }

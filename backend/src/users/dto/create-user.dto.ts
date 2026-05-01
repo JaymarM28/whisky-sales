@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, Min, Max, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, Min, Max, IsEnum, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
@@ -29,6 +29,11 @@ export class CreateUserDto {
   @Max(100)
   @IsOptional()
   commissionPct?: number;
+
+  @ApiPropertyOptional({ example: 'juan@email.com' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 
   /** Solo para admins: asignar el usuario a un tenant específico */
   @ApiPropertyOptional({ example: 'clxxx...', description: 'ID del tenant (solo admin)' })

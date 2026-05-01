@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, Min, Max, IsEmail } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -23,6 +23,11 @@ export class UpdateUserDto {
   @Max(100)
   @IsOptional()
   commissionPct?: number;
+
+  @ApiPropertyOptional({ example: 'juan@email.com' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 
   @ApiPropertyOptional({ example: true })
   @IsBoolean()

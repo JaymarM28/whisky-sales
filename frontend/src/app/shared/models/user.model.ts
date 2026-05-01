@@ -3,6 +3,7 @@ export type Role = 'OWNER' | 'PARTNER';
 export interface User {
   id: string;
   name: string;
+  email?: string;
   cedula: string;
   role: Role;
   commissionPct: number;

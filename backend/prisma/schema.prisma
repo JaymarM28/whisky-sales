@@ -27,6 +27,7 @@ model User {
   tenantId      String?
   tenant        Tenant?  @relation(fields: [tenantId], references: [id])
   name          String
+  email         String?  @unique
   cedula        String?  @unique
   role          Role     @default(PARTNER)
   isAdmin       Boolean  @default(false)
