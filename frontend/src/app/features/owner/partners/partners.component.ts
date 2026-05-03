@@ -90,6 +90,32 @@ export class PartnersComponent implements OnInit {
     });
   }
 
+  confirmarEliminar(socio: User): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        titulo: 'Eliminar socio',
+        mensaje: `¿Eliminar permanentemente a ${socio.name}? Esta acción no se puede deshacer.`,
+        confirmarLabel: 'Eliminar',
+        confirmarColor: 'warn',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((confirmado) => {
+      if (confirmado) {
+        this.userService.remove(socio.id).subscribe({
+          next: () => {
+            this.snackBar.open('Socio eliminado', 'Cerrar', { duration: 3000 });
+            this.cargarSocios();
+          },
+          error: (err) => {
+            const msg = err?.error?.message || 'No se puede eliminar este socio';
+            this.snackBar.open(msg, 'Cerrar', { duration: 5000 });
+          },
+        });
+      }
+    });
+  }
+
   confirmarDesactivar(socio: User): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {

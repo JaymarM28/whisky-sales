@@ -72,4 +72,12 @@ export class UsersController {
   deactivate(@Param('id') id: string, @Request() req) {
     return this.usersService.deactivate(id, req.user.tenantId);
   }
+
+  @ApiOperation({ summary: 'Eliminar socio permanentemente (solo si no tiene datos)' })
+  @UseGuards(RolesGuard)
+  @Roles('OWNER')
+  @Delete(':id/permanent')
+  remove(@Param('id') id: string, @Request() req) {
+    return this.usersService.remove(id, req.user.tenantId);
+  }
 }

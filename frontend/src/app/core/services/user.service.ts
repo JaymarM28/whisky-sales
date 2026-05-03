@@ -38,4 +38,8 @@ export class UserService {
   activate(id: string): Observable<ApiResponse<User>> {
     return this.http.put<ApiResponse<User>>(`${this.apiUrl}/${id}`, { active: true });
   }
+
+  remove(id: string): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/${id}/permanent`);
+  }
 }
