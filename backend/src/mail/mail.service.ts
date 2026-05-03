@@ -27,6 +27,27 @@ export class MailService {
     }
   }
 
+  async notifyOwnerNewTransfer(data: {
+    ownerEmail: string;
+    fromPartnerName: string;
+    toPartnerName: string;
+    productName: string;
+    quantity: number;
+    date: string;
+    notes?: string;
+  }) {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to: data.ownerEmail,
+        subject: `Traspaso registrado — ${data.fromPartnerName} → ${data.toPartnerName}`,
+        html: this.transferTemplate(data),
+      });
+    } catch (err) {
+      this.logger.error('Error al enviar notificación de traspaso', err);
+    }
+  }
+
   async notifyPartnerCommission(data: {
     partnerEmail: string;
     partnerName: string;
@@ -84,6 +105,53 @@ export class MailService {
             </tr>` : ''}
           </table>
           <p style="margin:24px 0 0;font-size:13px;color:#9ca3af">Ingresa al panel para confirmar o rechazar la venta.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  private transferTemplate(data: {
+    fromPartnerName: string;
+    toPartnerName: string;
+    productName: string;
+    quantity: number;
+    date: string;
+    notes?: string;
+  }): string {
+    return `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <div style="background:#1e293b;padding:24px 32px">
+          <h2 style="color:#f8fafc;margin:0;font-size:18px">🔄 Traspaso registrado</h2>
+        </div>
+        <div style="padding:24px 32px;background:#fff">
+          <p style="color:#374151;margin:0 0 16px">Se ha registrado un traspaso de inventario:</p>
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:10px 0;color:#6b7280;width:40%">De</td>
+              <td style="padding:10px 0;color:#111827;font-weight:600">${data.fromPartnerName}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:10px 0;color:#6b7280">A</td>
+              <td style="padding:10px 0;color:#111827;font-weight:600">${data.toPartnerName}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:10px 0;color:#6b7280">Producto</td>
+              <td style="padding:10px 0;color:#111827;font-weight:600">${data.productName}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:10px 0;color:#6b7280">Cantidad</td>
+              <td style="padding:10px 0;color:#111827;font-weight:600">${data.quantity}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:10px 0;color:#6b7280">Fecha</td>
+              <td style="padding:10px 0;color:#111827;font-weight:600">${data.date}</td>
+            </tr>
+            ${data.notes ? `
+            <tr>
+              <td style="padding:10px 0;color:#6b7280;vertical-align:top">Notas</td>
+              <td style="padding:10px 0;color:#111827">${data.notes}</td>
+            </tr>` : ''}
+          </table>
         </div>
       </div>
     `;

@@ -216,6 +216,89 @@ export class ReportsService {
     return { data, error: null, message: null };
   }
 
+  async getInventarioPorSocio(tenantId: string) {
+    const partners = await this.prisma.user.findMany({
+      where: { tenantId, role: 'PARTNER' },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, active: true },
+    });
+
+    const products = await this.prisma.product.findMany({
+      where: { tenantId },
+      select: { id: true, name: true, reference: true },
+    });
+
+    const data = await Promise.all(
+      partners.map(async (partner) => {
+        const productosConActividad = await Promise.all(
+          products.map(async (product) => {
+            const [entregas, ventasConf, ventasPend, traspasosOut, traspasosIn] = await Promise.all([
+              this.prisma.delivery.findMany({
+                where: { tenantId, partnerId: partner.id, productId: product.id },
+                orderBy: { date: 'asc' },
+                select: { id: true, quantity: true, date: true, notes: true },
+              }),
+              this.prisma.sale.findMany({
+                where: { tenantId, partnerId: partner.id, productId: product.id, status: 'CONFIRMED' },
+                orderBy: { date: 'asc' },
+                select: { id: true, quantity: true, date: true, notes: true, clientType: true },
+              }),
+              this.prisma.sale.findMany({
+                where: { tenantId, partnerId: partner.id, productId: product.id, status: 'PENDING' },
+                orderBy: { date: 'asc' },
+                select: { id: true, quantity: true, date: true, notes: true, clientType: true },
+              }),
+              this.prisma.transfer.findMany({
+                where: { tenantId, fromPartnerId: partner.id, productId: product.id },
+                orderBy: { date: 'asc' },
+                include: { toPartner: { select: { name: true } } },
+              }),
+              this.prisma.transfer.findMany({
+                where: { tenantId, toPartnerId: partner.id, productId: product.id },
+                orderBy: { date: 'asc' },
+                include: { fromPartner: { select: { name: true } } },
+              }),
+            ]);
+
+            const totalEntregas    = entregas.reduce((s, e) => s + e.quantity, 0);
+            const totalVentasConf  = ventasConf.reduce((s, v) => s + v.quantity, 0);
+            const totalVentasPend  = ventasPend.reduce((s, v) => s + v.quantity, 0);
+            const totalTrOut       = traspasosOut.reduce((s, t) => s + t.quantity, 0);
+            const totalTrIn        = traspasosIn.reduce((s, t) => s + t.quantity, 0);
+            const disponible       = totalEntregas - totalVentasConf - totalVentasPend - totalTrOut + totalTrIn;
+
+            if (totalEntregas === 0 && totalTrIn === 0) return null;
+
+            const movimientos: any[] = [
+              ...entregas.map(e => ({ tipo: 'ENTREGA', fecha: e.date, cantidad: e.quantity, notas: e.notes, contraparte: null })),
+              ...ventasConf.map(v => ({ tipo: 'VENTA_CONF', fecha: v.date, cantidad: v.quantity, notas: v.notes, contraparte: v.clientType })),
+              ...ventasPend.map(v => ({ tipo: 'VENTA_PEND', fecha: v.date, cantidad: v.quantity, notas: v.notes, contraparte: v.clientType })),
+              ...traspasosOut.map(t => ({ tipo: 'TRASPASO_SALIDA', fecha: t.date, cantidad: t.quantity, notas: t.notes, contraparte: t.toPartner.name })),
+              ...traspasosIn.map(t => ({ tipo: 'TRASPASO_ENTRADA', fecha: t.date, cantidad: t.quantity, notas: t.notes, contraparte: t.fromPartner.name })),
+            ].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+
+            return { producto: product, totalEntregas, totalVentasConf, totalVentasPend, totalTrOut, totalTrIn, disponible, movimientos };
+          }),
+        );
+
+        const productos = productosConActividad.filter(Boolean) as any[];
+
+        const totales = {
+          entregas:     productos.reduce((s, p) => s + p.totalEntregas, 0),
+          ventasConf:   productos.reduce((s, p) => s + p.totalVentasConf, 0),
+          ventasPend:   productos.reduce((s, p) => s + p.totalVentasPend, 0),
+          traspasosOut: productos.reduce((s, p) => s + p.totalTrOut, 0),
+          traspasosIn:  productos.reduce((s, p) => s + p.totalTrIn, 0),
+          disponible:   productos.reduce((s, p) => s + p.disponible, 0),
+        };
+
+        return { socio: partner, totales, productos };
+      }),
+    );
+
+    return { data, error: null, message: null };
+  }
+
   async getInventario(tenantId: string) {
     const products = await this.prisma.product.findMany({
       where: { tenantId, active: true },

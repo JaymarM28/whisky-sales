@@ -33,17 +33,30 @@ export class SalesService {
     const product = await this.prisma.product.findFirst({ where: { id: dto.productId, tenantId } });
     if (!product) throw new NotFoundException('Producto no encontrado');
 
-    const entregado = await this.prisma.delivery.aggregate({
-      where: { partnerId, productId: dto.productId, tenantId },
-      _sum: { quantity: true },
-    });
+    const [entregado, vendido, transferOut, transferIn] = await Promise.all([
+      this.prisma.delivery.aggregate({
+        where: { partnerId, productId: dto.productId, tenantId },
+        _sum: { quantity: true },
+      }),
+      this.prisma.sale.aggregate({
+        where: { partnerId, productId: dto.productId, tenantId, status: { in: ['CONFIRMED', 'PENDING'] } },
+        _sum: { quantity: true },
+      }),
+      this.prisma.transfer.aggregate({
+        where: { fromPartnerId: partnerId, productId: dto.productId, tenantId },
+        _sum: { quantity: true },
+      }),
+      this.prisma.transfer.aggregate({
+        where: { toPartnerId: partnerId, productId: dto.productId, tenantId },
+        _sum: { quantity: true },
+      }),
+    ]);
 
-    const vendido = await this.prisma.sale.aggregate({
-      where: { partnerId, productId: dto.productId, tenantId, status: { in: ['CONFIRMED', 'PENDING'] } },
-      _sum: { quantity: true },
-    });
-
-    const disponible = (entregado._sum.quantity || 0) - (vendido._sum.quantity || 0);
+    const disponible =
+      (entregado._sum.quantity || 0) -
+      (vendido._sum.quantity || 0) -
+      (transferOut._sum.quantity || 0) +
+      (transferIn._sum.quantity || 0);
 
     if (dto.quantity > disponible) {
       throw new BadRequestException(

@@ -32,6 +32,12 @@ export class ReportsComponent implements OnInit {
   cargandoInv = true;
   columnasInv = ['nombre', 'disponible', 'cajasDisponibles', 'rotacionPct', 'inversionDisponible', 'bajoStock'];
 
+  // Inventario por socio
+  inventarioSocios: any[] = [];
+  cargandoInvSocios = true;
+  columnasProductoSocio = ['producto', 'entregas', 'ventasConf', 'ventasPend', 'trOut', 'trIn', 'disponible'];
+  columnasMov = ['fecha', 'tipo', 'cantidad', 'contraparte', 'notas'];
+
   constructor(
     private reportsService: ReportsService,
     private fb: FormBuilder,
@@ -51,6 +57,7 @@ export class ReportsComponent implements OnInit {
     this.cargarVentas();
     this.cargarSocios();
     this.cargarInventario();
+    this.cargarInventarioSocios();
   }
 
   cargarRentabilidad(): void {
@@ -88,5 +95,39 @@ export class ReportsComponent implements OnInit {
 
   aplicarFiltro(): void {
     this.cargarVentas();
+  }
+
+  cargarInventarioSocios(): void {
+    this.cargandoInvSocios = true;
+    this.reportsService.getInventarioPorSocio().subscribe({
+      next: (res: any) => { this.inventarioSocios = res.data; this.cargandoInvSocios = false; },
+      error: () => { this.cargandoInvSocios = false; },
+    });
+  }
+
+  tipoMovLabel(tipo: string): string {
+    const map: Record<string, string> = {
+      ENTREGA: 'Entrega',
+      VENTA_CONF: 'Venta confirmada',
+      VENTA_PEND: 'Venta pendiente',
+      TRASPASO_SALIDA: 'Traspaso salida',
+      TRASPASO_ENTRADA: 'Traspaso entrada',
+    };
+    return map[tipo] ?? tipo;
+  }
+
+  tipoMovClase(tipo: string): string {
+    const map: Record<string, string> = {
+      ENTREGA: 'chip-entrega',
+      VENTA_CONF: 'chip-confirmada',
+      VENTA_PEND: 'chip-pendiente',
+      TRASPASO_SALIDA: 'chip-traspaso-out',
+      TRASPASO_ENTRADA: 'chip-traspaso-in',
+    };
+    return map[tipo] ?? '';
+  }
+
+  signoMov(tipo: string): string {
+    return ['ENTREGA', 'TRASPASO_ENTRADA'].includes(tipo) ? '+' : '−';
   }
 }

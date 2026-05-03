@@ -12,12 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class PartnerShellComponent implements AfterViewInit {
   @ViewChild('sidenav') sidenav!: MatSidenav;
 
-  navItems = [
-    { label: 'Dashboard',      icon: 'dashboard',      route: '/partner/dashboard' },
-    { label: 'Mis ventas',     icon: 'point_of_sale',  route: '/partner/my-sales' },
-    { label: 'Mis comisiones', icon: 'receipt_long',   route: '/partner/my-commissions' },
-    { label: 'Configuración',  icon: 'settings',       route: '/partner/settings' },
-  ];
+  navItems: { label: string; icon: string; route: string }[];
 
   paginaActual = 'Dashboard';
   isMobile = window.innerWidth < 768;
@@ -26,10 +21,22 @@ export class PartnerShellComponent implements AfterViewInit {
     '/partner/dashboard':      'Dashboard',
     '/partner/my-sales':       'Mis ventas',
     '/partner/my-commissions': 'Mis comisiones',
+    '/partner/my-transfers':   'Traspasos',
     '/partner/settings':       'Configuración',
   };
 
   constructor(public authService: AuthService, private router: Router) {
+    const base = [
+      { label: 'Dashboard',      icon: 'dashboard',     route: '/partner/dashboard' },
+      { label: 'Mis ventas',     icon: 'point_of_sale', route: '/partner/my-sales' },
+      { label: 'Mis comisiones', icon: 'receipt_long',  route: '/partner/my-commissions' },
+    ];
+    if (authService.currentUser?.canTransfer) {
+      base.push({ label: 'Traspasos', icon: 'swap_horiz', route: '/partner/my-transfers' });
+    }
+    base.push({ label: 'Configuración', icon: 'settings', route: '/partner/settings' });
+    this.navItems = base;
+
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: any) => {

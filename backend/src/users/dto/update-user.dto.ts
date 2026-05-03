@@ -33,4 +33,9 @@ export class UpdateUserDto {
   @IsBoolean()
   @IsOptional()
   active?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Permiso para realizar traspasos' })
+  @IsBoolean()
+  @IsOptional()
+  canTransfer?: boolean;
 }

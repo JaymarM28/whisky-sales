@@ -98,25 +98,40 @@ export class DashboardService {
 
         const items = await Promise.all(
           products.map(async (product) => {
-            const entregado = await this.prisma.delivery.aggregate({
-              where: { tenantId, partnerId: partner.id, productId: product.id },
-              _sum: { quantity: true },
-            });
-            const vendido = await this.prisma.sale.aggregate({
-              where: { tenantId, partnerId: partner.id, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
-              _sum: { quantity: true },
-            });
+            const [entregado, vendido, transferOut, transferIn] = await Promise.all([
+              this.prisma.delivery.aggregate({
+                where: { tenantId, partnerId: partner.id, productId: product.id },
+                _sum: { quantity: true },
+              }),
+              this.prisma.sale.aggregate({
+                where: { tenantId, partnerId: partner.id, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
+                _sum: { quantity: true },
+              }),
+              this.prisma.transfer.aggregate({
+                where: { tenantId, fromPartnerId: partner.id, productId: product.id },
+                _sum: { quantity: true },
+              }),
+              this.prisma.transfer.aggregate({
+                where: { tenantId, toPartnerId: partner.id, productId: product.id },
+                _sum: { quantity: true },
+              }),
+            ]);
+            const disponible =
+              (entregado._sum.quantity || 0) -
+              (vendido._sum.quantity || 0) -
+              (transferOut._sum.quantity || 0) +
+              (transferIn._sum.quantity || 0);
             return {
               socio: partner.name,
               producto: product.name,
               entregado: entregado._sum.quantity || 0,
               vendido: vendido._sum.quantity || 0,
-              disponible: (entregado._sum.quantity || 0) - (vendido._sum.quantity || 0),
+              disponible,
             };
           }),
         );
 
-        return items.filter((i) => i.entregado > 0);
+        return items.filter((i) => i.entregado > 0 || i.disponible > 0);
       }),
     );
 
@@ -156,20 +171,34 @@ export class DashboardService {
       where: { tenantId, active: true },
     });
 
-    // Inventario disponible por producto
+    // Inventario disponible por producto (incluye traspasos)
     const inventario = await Promise.all(
       products.map(async (product) => {
-        const entregado = await this.prisma.delivery.aggregate({
-          where: { tenantId, partnerId, productId: product.id },
-          _sum: { quantity: true },
-        });
-        const vendido = await this.prisma.sale.aggregate({
-          where: { tenantId, partnerId, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
-          _sum: { quantity: true },
-        });
+        const [entregado, vendido, transferOut, transferIn] = await Promise.all([
+          this.prisma.delivery.aggregate({
+            where: { tenantId, partnerId, productId: product.id },
+            _sum: { quantity: true },
+          }),
+          this.prisma.sale.aggregate({
+            where: { tenantId, partnerId, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
+            _sum: { quantity: true },
+          }),
+          this.prisma.transfer.aggregate({
+            where: { tenantId, fromPartnerId: partnerId, productId: product.id },
+            _sum: { quantity: true },
+          }),
+          this.prisma.transfer.aggregate({
+            where: { tenantId, toPartnerId: partnerId, productId: product.id },
+            _sum: { quantity: true },
+          }),
+        ]);
         return {
           product: { id: product.id, name: product.name },
-          disponible: (entregado._sum.quantity || 0) - (vendido._sum.quantity || 0),
+          disponible:
+            (entregado._sum.quantity || 0) -
+            (vendido._sum.quantity || 0) -
+            (transferOut._sum.quantity || 0) +
+            (transferIn._sum.quantity || 0),
         };
       }),
     );

@@ -45,10 +45,8 @@ export class DeliveriesService {
   }
 
   async remove(id: string, tenantId: string) {
-    const existing = await this.prisma.delivery.findFirst({ where: { id, tenantId } });
-    if (!existing) throw new NotFoundException('Entrega no encontrada');
-
-    await this.prisma.delivery.delete({ where: { id } });
+    const result = await this.prisma.delivery.deleteMany({ where: { id, tenantId } });
+    if (result.count === 0) throw new NotFoundException('Entrega no encontrada');
     return { data: null, error: null, message: 'Entrega eliminada exitosamente' };
   }
 }

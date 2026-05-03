@@ -7,6 +7,7 @@ export interface User {
   cedula: string;
   role: Role;
   commissionPct: number;
+  canTransfer: boolean;
   active: boolean;
   tenantId: string;
   createdAt: string;
@@ -18,4 +19,5 @@ export interface AuthUser {
   role: Role;
   isAdmin: boolean;
   tenantId: string;
+  canTransfer: boolean;
 }

@@ -405,5 +405,179 @@
       </div>
     </mat-tab>
 
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB 5: INVENTARIO POR SOCIO                   -->
+    <!-- ══════════════════════════════════════════════ -->
+    <mat-tab label="Inv. por socio">
+      <div class="tab-content">
+        <div *ngIf="cargandoInvSocios" class="loading-container"><mat-spinner diameter="36"></mat-spinner></div>
+
+        <ng-container *ngIf="!cargandoInvSocios">
+
+          <p *ngIf="inventarioSocios.length === 0" class="empty-state">Sin socios registrados</p>
+
+          <mat-accordion multi>
+            <mat-expansion-panel *ngFor="let s of inventarioSocios" class="socio-panel">
+
+              <!-- Panel header -->
+              <mat-expansion-panel-header>
+                <mat-panel-title class="panel-title">
+                  <mat-icon class="panel-icon">person</mat-icon>
+                  <span>{{ s.socio.name }}</span>
+                  <mat-chip *ngIf="!s.socio.active" class="chip-rechazada chip-sm">Inactivo</mat-chip>
+                </mat-panel-title>
+                <mat-panel-description class="panel-desc">
+                  <span class="desc-item"><strong>{{ s.totales.entregas }}</strong> entregadas</span>
+                  <span class="desc-sep">·</span>
+                  <span class="desc-item"><strong>{{ s.totales.ventasConf }}</strong> vendidas</span>
+                  <span class="desc-sep">·</span>
+                  <span class="desc-item disponible-badge">
+                    <strong>{{ s.totales.disponible }}</strong> disponibles
+                  </span>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <!-- Totales del socio -->
+              <div class="socio-kpis">
+                <div class="sk-item">
+                  <span class="sk-val">{{ s.totales.entregas }}</span>
+                  <span class="sk-lbl">Entregas</span>
+                </div>
+                <div class="sk-item">
+                  <span class="sk-val green">{{ s.totales.ventasConf }}</span>
+                  <span class="sk-lbl">Ventas conf.</span>
+                </div>
+                <div class="sk-item">
+                  <span class="sk-val amber">{{ s.totales.ventasPend }}</span>
+                  <span class="sk-lbl">Ventas pend.</span>
+                </div>
+                <div class="sk-item">
+                  <span class="sk-val red">{{ s.totales.traspasosOut }}</span>
+                  <span class="sk-lbl">Traspasos salida</span>
+                </div>
+                <div class="sk-item">
+                  <span class="sk-val blue">{{ s.totales.traspasosIn }}</span>
+                  <span class="sk-lbl">Traspasos entrada</span>
+                </div>
+                <div class="sk-item highlight">
+                  <span class="sk-val">{{ s.totales.disponible }}</span>
+                  <span class="sk-lbl">Disponible</span>
+                </div>
+              </div>
+
+              <!-- Sin actividad -->
+              <p *ngIf="s.productos.length === 0" class="empty-state">Sin actividad registrada</p>
+
+              <!-- Acordeón por producto -->
+              <mat-accordion multi *ngIf="s.productos.length > 0" class="product-accordion">
+                <mat-expansion-panel *ngFor="let p of s.productos" class="product-panel">
+
+                  <mat-expansion-panel-header>
+                    <mat-panel-title class="prod-title">
+                      <span>{{ p.producto.nombre }}</span>
+                      <span class="ref-badge">{{ p.producto.referencia }}</span>
+                    </mat-panel-title>
+                    <mat-panel-description class="prod-desc">
+                      <span [class.red-text]="p.disponible <= 0" [class.green-text]="p.disponible > 0">
+                        {{ p.disponible }} disp.
+                      </span>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <!-- Resumen producto -->
+                  <div class="prod-summary">
+                    <table mat-table [dataSource]="[p]" class="summary-table">
+                      <ng-container matColumnDef="entregas">
+                        <th mat-header-cell *matHeaderCellDef>Entregas</th>
+                        <td mat-cell *matCellDef="let r">{{ r.totalEntregas }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="ventasConf">
+                        <th mat-header-cell *matHeaderCellDef>V. confirmadas</th>
+                        <td mat-cell *matCellDef="let r" class="green-text">−{{ r.totalVentasConf }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="ventasPend">
+                        <th mat-header-cell *matHeaderCellDef>V. pendientes</th>
+                        <td mat-cell *matCellDef="let r" class="amber-text">−{{ r.totalVentasPend }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="trOut">
+                        <th mat-header-cell *matHeaderCellDef>Trasp. salida</th>
+                        <td mat-cell *matCellDef="let r" class="red-text">−{{ r.totalTrOut }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="trIn">
+                        <th mat-header-cell *matHeaderCellDef>Trasp. entrada</th>
+                        <td mat-cell *matCellDef="let r" class="blue-text">+{{ r.totalTrIn }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="disponible">
+                        <th mat-header-cell *matHeaderCellDef>Disponible</th>
+                        <td mat-cell *matCellDef="let r" class="bold" [class.red-text]="r.disponible <= 0">
+                          {{ r.disponible }}
+                        </td>
+                      </ng-container>
+                      <ng-container matColumnDef="producto">
+                        <th mat-header-cell *matHeaderCellDef></th>
+                        <td mat-cell *matCellDef="let r"></td>
+                      </ng-container>
+                      <tr mat-header-row *matHeaderRowDef="columnasProductoSocio"></tr>
+                      <tr mat-row *matRowDef="let row; columns: columnasProductoSocio"></tr>
+                    </table>
+                  </div>
+
+                  <!-- Timeline de movimientos -->
+                  <p class="mov-label">Historial de movimientos</p>
+                  <table mat-table [dataSource]="p.movimientos" class="mov-table">
+
+                    <ng-container matColumnDef="fecha">
+                      <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                      <td mat-cell *matCellDef="let m">{{ m.fecha | date:'dd/MM/yyyy' }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="tipo">
+                      <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                      <td mat-cell *matCellDef="let m">
+                        <mat-chip [ngClass]="tipoMovClase(m.tipo)">{{ tipoMovLabel(m.tipo) }}</mat-chip>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="cantidad">
+                      <th mat-header-cell *matHeaderCellDef>Cant.</th>
+                      <td mat-cell *matCellDef="let m"
+                          [class.green-text]="signoMov(m.tipo) === '+'"
+                          [class.red-text]="signoMov(m.tipo) === '−'">
+                        {{ signoMov(m.tipo) }}{{ m.cantidad }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="contraparte">
+                      <th mat-header-cell *matHeaderCellDef>Detalle</th>
+                      <td mat-cell *matCellDef="let m">
+                        <span *ngIf="m.tipo === 'TRASPASO_SALIDA'">→ {{ m.contraparte }}</span>
+                        <span *ngIf="m.tipo === 'TRASPASO_ENTRADA'">← {{ m.contraparte }}</span>
+                        <span *ngIf="m.tipo === 'VENTA_CONF' || m.tipo === 'VENTA_PEND'">
+                          {{ m.contraparte === 'BUSINESS' ? 'Negocio' : 'Consumidor' }}
+                        </span>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="notas">
+                      <th mat-header-cell *matHeaderCellDef>Notas</th>
+                      <td mat-cell *matCellDef="let m">{{ m.notas || '—' }}</td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="columnasMov"></tr>
+                    <tr mat-row *matRowDef="let row; columns: columnasMov"></tr>
+                  </table>
+
+                  <p *ngIf="p.movimientos.length === 0" class="empty-state">Sin movimientos</p>
+
+                </mat-expansion-panel>
+              </mat-accordion>
+
+            </mat-expansion-panel>
+          </mat-accordion>
+
+        </ng-container>
+      </div>
+    </mat-tab>
+
   </mat-tab-group>
 </div>

@@ -10,6 +10,7 @@ import { CommissionsComponent } from './commissions/commissions.component';
 import { SettingsComponent } from './settings/settings.component';
 import { AdminComponent } from './admin/admin.component';
 import { ReportsComponent } from './reports/reports.component';
+import { TransfersComponent } from './transfers/transfers.component';
 
 const routes: Routes = [
   {
@@ -20,6 +21,7 @@ const routes: Routes = [
       { path: 'partners', component: PartnersComponent },
       { path: 'products', component: ProductsComponent },
       { path: 'deliveries', component: DeliveriesComponent },
+      { path: 'transfers', component: TransfersComponent },
       { path: 'sales', component: SalesComponent },
       { path: 'commissions', component: CommissionsComponent },
       { path: 'reports', component: ReportsComponent },

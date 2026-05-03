@@ -14,7 +14,7 @@ import { PartnerFormDialogComponent } from './partner-form-dialog/partner-form-d
 export class PartnersComponent implements OnInit {
   socios: User[] = [];
   cargando = true;
-  columnas = ['nombre', 'comision', 'estado', 'acciones'];
+  columnas = ['nombre', 'comision', 'traspaso', 'estado', 'acciones'];
 
   constructor(
     private userService: UserService,
@@ -49,6 +49,19 @@ export class PartnersComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((resultado) => {
       if (resultado) this.cargarSocios();
+    });
+  }
+
+  toggleCanTransfer(socio: User): void {
+    this.userService.update(socio.id, { canTransfer: !socio.canTransfer }).subscribe({
+      next: () => {
+        const msg = !socio.canTransfer ? 'Traspaso habilitado' : 'Traspaso deshabilitado';
+        this.snackBar.open(msg, 'Cerrar', { duration: 3000 });
+        this.cargarSocios();
+      },
+      error: () => {
+        this.snackBar.open('Error al actualizar permiso', 'Cerrar', { duration: 3000 });
+      },
     });
   }
 

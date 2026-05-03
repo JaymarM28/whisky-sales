@@ -22,15 +22,14 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (this.authService.isLoggedIn()) {
-      this.redirigir();
-      return;
-    }
-
     this.form = this.fb.group({
       cedula: ['', [Validators.required]],
       pin: ['', [Validators.required, Validators.minLength(4)]],
     });
+
+    if (this.authService.isLoggedIn()) {
+      this.redirigir();
+    }
   }
 
   ingresar(): void {
@@ -55,10 +54,9 @@ export class LoginComponent implements OnInit {
 
   private redirigir(): void {
     const user = this.authService.currentUser;
-    if (user?.role === 'OWNER') {
-      this.router.navigate(['/owner/dashboard']);
-    } else {
-      this.router.navigate(['/partner/dashboard']);
-    }
+    const route = user?.role === 'OWNER' ? ['/owner/dashboard'] : ['/partner/dashboard'];
+    this.router.navigate(route)
+      .then((navigated) => { if (!navigated) this.cargando = false; })
+      .catch(() => { this.cargando = false; });
   }
 }

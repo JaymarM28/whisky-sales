@@ -57,18 +57,30 @@ export class InventoryService {
 
     const items = await Promise.all(
       products.map(async (product) => {
-        const entregado = await this.prisma.delivery.aggregate({
-          where: { tenantId, partnerId, productId: product.id },
-          _sum: { quantity: true },
-        });
-
-        const vendido = await this.prisma.sale.aggregate({
-          where: { tenantId, partnerId, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
-          _sum: { quantity: true },
-        });
+        const [entregado, vendido, transferOut, transferIn] = await Promise.all([
+          this.prisma.delivery.aggregate({
+            where: { tenantId, partnerId, productId: product.id },
+            _sum: { quantity: true },
+          }),
+          this.prisma.sale.aggregate({
+            where: { tenantId, partnerId, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
+            _sum: { quantity: true },
+          }),
+          this.prisma.transfer.aggregate({
+            where: { tenantId, fromPartnerId: partnerId, productId: product.id },
+            _sum: { quantity: true },
+          }),
+          this.prisma.transfer.aggregate({
+            where: { tenantId, toPartnerId: partnerId, productId: product.id },
+            _sum: { quantity: true },
+          }),
+        ]);
 
         const disponible =
-          (entregado._sum.quantity || 0) - (vendido._sum.quantity || 0);
+          (entregado._sum.quantity || 0) -
+          (vendido._sum.quantity || 0) -
+          (transferOut._sum.quantity || 0) +
+          (transferIn._sum.quantity || 0);
 
         return {
           product,
@@ -80,7 +92,7 @@ export class InventoryService {
     );
 
     return {
-      data: items.filter((i) => i.totalDelivered > 0),
+      data: items.filter((i) => i.totalDelivered > 0 || i.available > 0),
       error: null,
       message: null,
     };

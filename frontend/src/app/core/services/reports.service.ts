@@ -27,4 +27,8 @@ export class ReportsService {
   getInventario(): Observable<any> {
     return this.http.get(`${this.apiUrl}/inventario`);
   }
+
+  getInventarioPorSocio(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/inventario-socios`);
+  }
 }

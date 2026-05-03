@@ -9,97 +9,127 @@ datasource db {
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  users              User[]
-  products           Product[]
-  deliveries         Delivery[]
-  sales              Sale[]
+  id                 String              @id @default(cuid())
+  name               String
+  slug               String              @unique
+  active             Boolean             @default(true)
+  createdAt          DateTime            @default(now())
   commissionPayments CommissionPayment[]
+  deliveries         Delivery[]
+  products           Product[]
+  sales              Sale[]
+  users              User[]
+  transfers          Transfer[]
 }
 
 model User {
-  id            String   @id @default(cuid())
-  tenantId      String?
-  tenant        Tenant?  @relation(fields: [tenantId], references: [id])
-  name          String
-  email         String?  @unique
-  cedula        String?  @unique
-  role          Role     @default(PARTNER)
-  isAdmin       Boolean  @default(false)
-  pin           String
-  commissionPct Float    @default(0)
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-
+  id                 String              @id @default(cuid())
+  name               String
+  role               Role                @default(PARTNER)
+  pin                String
+  commissionPct      Float               @default(0)
+  canTransfer        Boolean             @default(false)
+  active             Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  cedula             String?             @unique
+  tenantId           String?
+  isAdmin            Boolean             @default(false)
+  email              String?             @unique
+  commissionPayments CommissionPayment[]
   deliveries         Delivery[]
   sales              Sale[]
-  commissionPayments CommissionPayment[]
-}
-
-enum Role {
-  OWNER
-  PARTNER
+  tenant             Tenant?             @relation(fields: [tenantId], references: [id])
+  transfersFrom      Transfer[]          @relation("TransferFrom")
+  transfersTo        Transfer[]          @relation("TransferTo")
 }
 
 model Product {
-  id           String   @id @default(cuid())
-  tenantId     String?
-  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
-  name         String
-  reference    String
-  unitsPerBox  Int?
-  boxCost      Int?
+  id            String     @id @default(cuid())
+  name          String
+  reference     String
   costPrice     Int
-  partnerPrice  Int     @default(0)
   salePrice     Int
-  businessPrice Int     @default(0)
-  active        Boolean @default(true)
-  createdAt    DateTime @default(now())
-
-  deliveries Delivery[]
-  sales      Sale[]
+  active        Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  partnerPrice  Int        @default(0)
+  tenantId      String?
+  boxCost       Int?
+  unitsPerBox   Int?
+  businessPrice Int        @default(0)
+  deliveries    Delivery[]
+  tenant        Tenant?    @relation(fields: [tenantId], references: [id])
+  sales         Sale[]
+  transfers     Transfer[]
 
   @@unique([tenantId, reference])
 }
 
 model Delivery {
   id        String   @id @default(cuid())
-  tenantId  String?
-  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
-  partner   User     @relation(fields: [partnerId], references: [id])
   partnerId String
-  product   Product  @relation(fields: [productId], references: [id])
   productId String
   quantity  Int
   date      DateTime
   notes     String?
   createdAt DateTime @default(now())
+  tenantId  String?
+  partner   User     @relation(fields: [partnerId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
 }
 
 model Sale {
-  id           String     @id @default(cuid())
-  tenantId     String?
-  tenant       Tenant?    @relation(fields: [tenantId], references: [id])
-  partner      User       @relation(fields: [partnerId], references: [id])
-  partnerId    String
-  product      Product    @relation(fields: [productId], references: [id])
-  productId    String
-  quantity             Int
-  date                 DateTime
-  receiptImage         String?
-  notes                String?
-  status                  SaleStatus @default(PENDING)
-  clientType              ClientType @default(CONSUMER)
-  costPriceSnapshot       Int?
-  salePriceSnapshot       Int?
-  partnerPriceSnapshot    Int?
-  businessPriceSnapshot   Int?
-  createdAt               DateTime   @default(now())
+  id                    String     @id @default(cuid())
+  partnerId             String
+  productId             String
+  quantity              Int
+  date                  DateTime
+  receiptImage          String?
+  notes                 String?
+  status                SaleStatus @default(PENDING)
+  createdAt             DateTime   @default(now())
+  tenantId              String?
+  costPriceSnapshot     Int?
+  partnerPriceSnapshot  Int?
+  salePriceSnapshot     Int?
+  businessPriceSnapshot Int?
+  clientType            ClientType @default(CONSUMER)
+  partner               User       @relation(fields: [partnerId], references: [id])
+  product               Product    @relation(fields: [productId], references: [id])
+  tenant                Tenant?    @relation(fields: [tenantId], references: [id])
+}
+
+model Transfer {
+  id            String   @id @default(cuid())
+  tenantId      String?
+  fromPartnerId String
+  toPartnerId   String
+  productId     String
+  quantity      Int
+  date          DateTime
+  notes         String?
+  createdAt     DateTime @default(now())
+  fromPartner   User     @relation("TransferFrom", fields: [fromPartnerId], references: [id])
+  toPartner     User     @relation("TransferTo",   fields: [toPartnerId],   references: [id])
+  product       Product  @relation(fields: [productId], references: [id])
+  tenant        Tenant?  @relation(fields: [tenantId],  references: [id])
+}
+
+model CommissionPayment {
+  id               String   @id @default(cuid())
+  partnerId        String
+  amount           Int
+  paymentReference String?
+  date             DateTime
+  createdAt        DateTime @default(now())
+  tenantId         String?
+  partner          User     @relation(fields: [partnerId], references: [id])
+  tenant           Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+enum Role {
+  OWNER
+  PARTNER
 }
 
 enum SaleStatus {
@@ -111,16 +141,4 @@ enum SaleStatus {
 enum ClientType {
   CONSUMER
   BUSINESS
-}
-
-model CommissionPayment {
-  id               String   @id @default(cuid())
-  tenantId         String?
-  tenant           Tenant?  @relation(fields: [tenantId], references: [id])
-  partner          User     @relation(fields: [partnerId], references: [id])
-  partnerId        String
-  amount           Int
-  paymentReference String?
-  date             DateTime
-  createdAt        DateTime @default(now())
 }

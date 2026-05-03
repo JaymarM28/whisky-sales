@@ -27,6 +27,8 @@ import { MySalesComponent } from './my-sales/my-sales.component';
 import { ReportSaleDialogComponent } from './my-sales/report-sale-dialog/report-sale-dialog.component';
 import { MyCommissionsComponent } from './my-commissions/my-commissions.component';
 import { PartnerSettingsComponent } from './settings/partner-settings.component';
+import { MyTransfersComponent } from './my-transfers/my-transfers.component';
+import { TransferDialogComponent } from './my-transfers/transfer-dialog/transfer-dialog.component';
 
 @NgModule({
   declarations: [
@@ -36,6 +38,8 @@ import { PartnerSettingsComponent } from './settings/partner-settings.component'
     ReportSaleDialogComponent,
     MyCommissionsComponent,
     PartnerSettingsComponent,
+    MyTransfersComponent,
+    TransferDialogComponent,
   ],
   imports: [
     CommonModule,

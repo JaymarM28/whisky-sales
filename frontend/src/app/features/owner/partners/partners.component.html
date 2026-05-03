@@ -28,6 +28,17 @@
             <td mat-cell *matCellDef="let row">{{ row.commissionPct }}%</td>
           </ng-container>
 
+          <ng-container matColumnDef="traspaso">
+            <th mat-header-cell *matHeaderCellDef>Puede traspasar</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-slide-toggle
+                [checked]="row.canTransfer"
+                (change)="toggleCanTransfer(row)"
+                color="primary">
+              </mat-slide-toggle>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="estado">
             <th mat-header-cell *matHeaderCellDef>Estado</th>
             <td mat-cell *matCellDef="let row">

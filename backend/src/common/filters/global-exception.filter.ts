@@ -28,11 +28,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           ? res
           : (res as any).message || exception.message;
     } else if (exception instanceof Error) {
-      message = exception.message;
       this.logger.error(
         `[${request.method} ${request.url}] ${exception.message}`,
         exception.stack,
       );
+      // message stays as 'Error interno del servidor' — never expose internal details to clients
     }
 
     response.status(status).json({

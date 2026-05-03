@@ -5,6 +5,7 @@ import { PartnerDashboardComponent } from './dashboard/partner-dashboard.compone
 import { MySalesComponent } from './my-sales/my-sales.component';
 import { MyCommissionsComponent } from './my-commissions/my-commissions.component';
 import { PartnerSettingsComponent } from './settings/partner-settings.component';
+import { MyTransfersComponent } from './my-transfers/my-transfers.component';
 
 const routes: Routes = [
   {
@@ -14,6 +15,7 @@ const routes: Routes = [
       { path: 'dashboard', component: PartnerDashboardComponent },
       { path: 'my-sales', component: MySalesComponent },
       { path: 'my-commissions', component: MyCommissionsComponent },
+      { path: 'my-transfers', component: MyTransfersComponent },
       { path: 'settings', component: PartnerSettingsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],

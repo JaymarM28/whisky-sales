@@ -42,4 +42,10 @@ export class ReportsController {
   getInventario(@Request() req) {
     return this.reportsService.getInventario(req.user.tenantId);
   }
+
+  @ApiOperation({ summary: 'Inventario completo por socio con movimientos' })
+  @Get('inventario-socios')
+  getInventarioPorSocio(@Request() req) {
+    return this.reportsService.getInventarioPorSocio(req.user.tenantId);
+  }
 }

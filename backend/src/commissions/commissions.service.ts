@@ -91,10 +91,8 @@ export class CommissionsService {
   }
 
   async remove(id: string, tenantId: string) {
-    const existing = await this.prisma.commissionPayment.findFirst({ where: { id, tenantId } });
-    if (!existing) throw new NotFoundException('Pago no encontrado');
-
-    await this.prisma.commissionPayment.delete({ where: { id } });
+    const result = await this.prisma.commissionPayment.deleteMany({ where: { id, tenantId } });
+    if (result.count === 0) throw new NotFoundException('Pago no encontrado');
     return { data: null, error: null, message: 'Pago eliminado exitosamente' };
   }
 }

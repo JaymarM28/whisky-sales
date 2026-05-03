@@ -18,6 +18,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import { OwnerRoutingModule } from './owner-routing.module';
@@ -40,6 +42,8 @@ import { CreateTenantDialogComponent } from './admin/create-tenant-dialog/create
 import { CreateOwnerDialogComponent } from './admin/create-owner-dialog/create-owner-dialog.component';
 import { TenantDetailDialogComponent } from './admin/tenant-detail-dialog/tenant-detail-dialog.component';
 import { ReportsComponent } from './reports/reports.component';
+import { TransfersComponent } from './transfers/transfers.component';
+import { TransferFormDialogComponent } from './transfers/transfer-form-dialog/transfer-form-dialog.component';
 
 @NgModule({
   declarations: [
@@ -61,6 +65,8 @@ import { ReportsComponent } from './reports/reports.component';
     CreateOwnerDialogComponent,
     TenantDetailDialogComponent,
     ReportsComponent,
+    TransfersComponent,
+    TransferFormDialogComponent,
   ],
   imports: [
     CommonModule,
@@ -86,6 +92,8 @@ import { ReportsComponent } from './reports/reports.component';
     MatTooltipModule,
     MatTabsModule,
     MatPaginatorModule,
+    MatSlideToggleModule,
+    MatExpansionModule,
   ],
 })
 export class OwnerModule {}

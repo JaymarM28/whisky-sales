@@ -12,6 +12,7 @@ const USER_SELECT = {
   role: true,
   isAdmin: true,
   commissionPct: true,
+  canTransfer: true,
   active: true,
   tenantId: true,
   createdAt: true,

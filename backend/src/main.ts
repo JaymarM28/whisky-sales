@@ -13,23 +13,22 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.use(helmet());
 
-  // Swagger
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Whisky Sales Manager API')
-    .setDescription('API REST para gestión de ventas de licores premium')
-    .setVersion('1.0')
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' },
-      'JWT',
-    )
-    .build();
-
-  // El cast evita conflictos de tipos entre versiones de @nestjs/common en node_modules
-  const document = SwaggerModule.createDocument(app as any, swaggerConfig);
-  SwaggerModule.setup('docs', app as any, document, {
-    swaggerOptions: { persistAuthorization: true },
-  });
-  console.log(`Swagger disponible en http://localhost:${process.env.PORT || 3000}/docs`);
+  if (process.env.NODE_ENV !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Whisky Sales Manager API')
+      .setDescription('API REST para gestión de ventas de licores premium')
+      .setVersion('1.0')
+      .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' },
+        'JWT',
+      )
+      .build();
+    const document = SwaggerModule.createDocument(app as any, swaggerConfig);
+    SwaggerModule.setup('docs', app as any, document, {
+      swaggerOptions: { persistAuthorization: true },
+    });
+    console.log(`Swagger disponible en http://localhost:${process.env.PORT || 3000}/docs`);
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -49,9 +48,10 @@ async function bootstrap() {
     .split(',')
     .map((o) => o.trim());
 
+  const isProd = process.env.NODE_ENV === 'production';
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if ((!origin && !isProd) || allowedOrigins.includes(origin ?? '')) {
         callback(null, true);
       } else {
         callback(new Error(`Origen no permitido: ${origin}`));
