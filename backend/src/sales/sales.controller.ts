@@ -22,24 +22,16 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { memoryStorage } from 'multer';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleStatusDto } from './dto/update-sale-status.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
-const storage = diskStorage({
-  destination: join(__dirname, '..', '..', '..', 'uploads'),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `receipt-${uniqueSuffix}${extname(file.originalname)}`);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
+const fileFilter = (_req: any, file: Express.Multer.File, cb: any) => {
   if (!['image/jpeg', 'image/png'].includes(file.mimetype)) {
     return cb(new BadRequestException('Solo se permiten imágenes JPEG o PNG'), false);
   }
@@ -51,7 +43,10 @@ const fileFilter = (req, file, cb) => {
 @UseGuards(JwtAuthGuard)
 @Controller('sales')
 export class SalesController {
-  constructor(private salesService: SalesService) {}
+  constructor(
+    private salesService: SalesService,
+    private cloudinaryService: CloudinaryService,
+  ) {}
 
   @ApiOperation({ summary: 'Listar ventas (OWNER: todas | PARTNER: las suyas)' })
   @Get()
@@ -77,17 +72,20 @@ export class SalesController {
   @Post()
   @UseInterceptors(
     FileInterceptor('receiptImage', {
-      storage,
+      storage: memoryStorage(),
       fileFilter,
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  create(
+  async create(
     @Body() dto: CreateSaleDto,
     @Request() req,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const receiptImage = file ? `/uploads/${file.filename}` : undefined;
+    let receiptImage: string | undefined;
+    if (file) {
+      receiptImage = await this.cloudinaryService.uploadImage(file.buffer);
+    }
     return this.salesService.create(dto, req.user.id, req.user.tenantId, receiptImage);
   }
 

@@ -8,6 +8,8 @@ export interface Product {
   partnerPrice: number;
   salePrice: number;
   businessPrice: number;
+  businessPrice2: number;
+  businessPrice3: number;
   active: boolean;
   createdAt: string;
 }

@@ -19,8 +19,14 @@
       <mat-label>Tipo de cliente</mat-label>
       <mat-select formControlName="clientType">
         <mat-option value="CONSUMER">Consumidor final</mat-option>
-        <mat-option value="BUSINESS" [disabled]="!tieneNegocio()">
-          Negocio / Mayorista {{ !tieneNegocio() ? '(no configurado)' : '' }}
+        <mat-option value="BUSINESS" [disabled]="!tieneNegocio(1)">
+          Negocio 1 {{ !tieneNegocio(1) ? '(no configurado)' : '' }}
+        </mat-option>
+        <mat-option value="BUSINESS_2" [disabled]="!tieneNegocio(2)">
+          Negocio 2 {{ !tieneNegocio(2) ? '(no configurado)' : '' }}
+        </mat-option>
+        <mat-option value="BUSINESS_3" [disabled]="!tieneNegocio(3)">
+          Negocio 3 {{ !tieneNegocio(3) ? '(no configurado)' : '' }}
         </mat-option>
       </mat-select>
     </mat-form-field>

@@ -23,7 +23,7 @@ export class SalesService {
       product: { select: { id: true, name: true, reference: true, salePrice: true, costPrice: true } },
     };
     const [data, total] = await Promise.all([
-      this.prisma.sale.findMany({ where, include, orderBy: { date: 'desc' }, skip, take: limit }),
+      this.prisma.sale.findMany({ where, include, orderBy: { createdAt: 'desc' }, skip, take: limit }),
       this.prisma.sale.count({ where }),
     ]);
     return { data, total, page, limit, totalPages: Math.ceil(total / limit), error: null, message: null };
@@ -81,6 +81,8 @@ export class SalesService {
         salePriceSnapshot: product.salePrice,
         partnerPriceSnapshot: product.partnerPrice,
         businessPriceSnapshot: product.businessPrice,
+        businessPrice2Snapshot: product.businessPrice2,
+        businessPrice3Snapshot: product.businessPrice3,
       },
       include: {
         partner: { select: { id: true, name: true } },

@@ -6,7 +6,6 @@ import { SaleService } from '../../../core/services/sale.service';
 import { Sale } from '../../../shared/models/sale.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ReceiptDialogComponent } from './receipt-dialog/receipt-dialog.component';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-owner-sales',
@@ -76,7 +75,7 @@ export class SalesComponent implements OnInit {
   verComprobante(venta: Sale): void {
     if (!venta.receiptImage) return;
     this.dialog.open(ReceiptDialogComponent, {
-      data: { imageUrl: `${environment.apiUrl.replace('/api', '')}${venta.receiptImage}` },
+      data: { imageUrl: venta.receiptImage },
       maxWidth: '90vw',
     });
   }
@@ -99,6 +98,16 @@ export class SalesComponent implements OnInit {
         });
       }
     });
+  }
+
+  getLabelCliente(clientType: string): string {
+    const labels: any = {
+      CONSUMER: 'Consumidor',
+      BUSINESS: 'Negocio 1',
+      BUSINESS_2: 'Negocio 2',
+      BUSINESS_3: 'Negocio 3',
+    };
+    return labels[clientType] || clientType;
   }
 
   getLabelEstado(status: string): string {

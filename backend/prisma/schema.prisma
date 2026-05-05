@@ -55,8 +55,10 @@ model Product {
   tenantId      String?
   boxCost       Int?
   unitsPerBox   Int?
-  businessPrice Int        @default(0)
-  deliveries    Delivery[]
+  businessPrice  Int        @default(0)
+  businessPrice2 Int        @default(0)
+  businessPrice3 Int        @default(0)
+  deliveries     Delivery[]
   tenant        Tenant?    @relation(fields: [tenantId], references: [id])
   sales         Sale[]
   transfers     Transfer[]
@@ -92,8 +94,10 @@ model Sale {
   costPriceSnapshot     Int?
   partnerPriceSnapshot  Int?
   salePriceSnapshot     Int?
-  businessPriceSnapshot Int?
-  clientType            ClientType @default(CONSUMER)
+  businessPriceSnapshot  Int?
+  businessPrice2Snapshot Int?
+  businessPrice3Snapshot Int?
+  clientType             ClientType @default(CONSUMER)
   partner               User       @relation(fields: [partnerId], references: [id])
   product               Product    @relation(fields: [productId], references: [id])
   tenant                Tenant?    @relation(fields: [tenantId], references: [id])
@@ -141,4 +145,6 @@ enum SaleStatus {
 enum ClientType {
   CONSUMER
   BUSINESS
+  BUSINESS_2
+  BUSINESS_3
 }

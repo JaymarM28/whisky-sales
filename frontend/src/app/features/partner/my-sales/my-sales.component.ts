@@ -62,6 +62,16 @@ export class MySalesComponent implements OnInit {
     });
   }
 
+  getLabelCliente(clientType: string): string {
+    const labels: any = {
+      CONSUMER: 'Consumidor',
+      BUSINESS: 'Negocio 1',
+      BUSINESS_2: 'Negocio 2',
+      BUSINESS_3: 'Negocio 3',
+    };
+    return labels[clientType] || clientType;
+  }
+
   getLabelEstado(status: string): string {
     const labels: any = { PENDING: 'Pendiente', CONFIRMED: 'Confirmada', REJECTED: 'Rechazada' };
     return labels[status] || status;

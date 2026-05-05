@@ -67,9 +67,16 @@ export class CommissionsService {
     });
 
     const generada = ventas.reduce((acc, sale) => {
-      const precioVenta = (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
-        ? sale.businessPriceSnapshot
-        : (sale.salePriceSnapshot ?? sale.product.salePrice);
+      let precioVenta: number;
+      if (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
+        precioVenta = sale.businessPriceSnapshot;
+      else if (sale.clientType === 'BUSINESS_2' && sale.businessPrice2Snapshot)
+        precioVenta = sale.businessPrice2Snapshot;
+      else if (sale.clientType === 'BUSINESS_3' && sale.businessPrice3Snapshot)
+        precioVenta = sale.businessPrice3Snapshot;
+      else
+        precioVenta = sale.salePriceSnapshot ?? sale.product.salePrice;
+
       const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
       const margenSocio = (precioVenta - precioSocio) * sale.quantity;
       return acc + margenSocio * (partner.commissionPct / 100);

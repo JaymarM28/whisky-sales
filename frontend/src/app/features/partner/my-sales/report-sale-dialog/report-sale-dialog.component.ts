@@ -122,11 +122,16 @@ export class ReportSaleDialogComponent implements OnInit {
     if (!producto) return null;
     const clientType = this.form.value.clientType;
     if (clientType === 'BUSINESS' && producto.businessPrice > 0) return producto.businessPrice;
+    if (clientType === 'BUSINESS_2' && producto.businessPrice2 > 0) return producto.businessPrice2;
+    if (clientType === 'BUSINESS_3' && producto.businessPrice3 > 0) return producto.businessPrice3;
     return producto.salePrice;
   }
 
-  tieneNegocio(): boolean {
+  tieneNegocio(nivel: 1 | 2 | 3): boolean {
     const producto = this.getProductoSeleccionado();
-    return !!producto && producto.businessPrice > 0;
+    if (!producto) return false;
+    if (nivel === 1) return producto.businessPrice > 0;
+    if (nivel === 2) return producto.businessPrice2 > 0;
+    return producto.businessPrice3 > 0;
   }
 }

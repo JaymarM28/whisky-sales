@@ -14,6 +14,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { MailModule } from './mail/mail.module';
 import { TransfersModule } from './transfers/transfers.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TransfersModule } from './transfers/transfers.module';
     ReportsModule,
     MailModule,
     TransfersModule,
+    CloudinaryModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

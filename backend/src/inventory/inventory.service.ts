@@ -13,7 +13,7 @@ export class InventoryService {
 
     const products = await this.prisma.product.findMany({
       where: { tenantId, active: true },
-      select: { id: true, name: true, reference: true, salePrice: true, businessPrice: true },
+      select: { id: true, name: true, reference: true, salePrice: true, businessPrice: true, businessPrice2: true, businessPrice3: true },
     });
 
     const result = await Promise.all(
@@ -52,7 +52,7 @@ export class InventoryService {
   async getByPartner(partnerId: string, tenantId: string) {
     const products = await this.prisma.product.findMany({
       where: { tenantId, active: true },
-      select: { id: true, name: true, reference: true, salePrice: true, businessPrice: true },
+      select: { id: true, name: true, reference: true, salePrice: true, businessPrice: true, businessPrice2: true, businessPrice3: true },
     });
 
     const items = await Promise.all(

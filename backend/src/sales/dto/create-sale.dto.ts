@@ -18,10 +18,10 @@ export class CreateSaleDto {
   @IsDateString()
   date: string;
 
-  @ApiPropertyOptional({ enum: ['CONSUMER', 'BUSINESS'], default: 'CONSUMER' })
-  @IsEnum(['CONSUMER', 'BUSINESS'])
+  @ApiPropertyOptional({ enum: ['CONSUMER', 'BUSINESS', 'BUSINESS_2', 'BUSINESS_3'], default: 'CONSUMER' })
+  @IsEnum(['CONSUMER', 'BUSINESS', 'BUSINESS_2', 'BUSINESS_3'])
   @IsOptional()
-  clientType?: 'CONSUMER' | 'BUSINESS';
+  clientType?: 'CONSUMER' | 'BUSINESS' | 'BUSINESS_2' | 'BUSINESS_3';
 
   @ApiPropertyOptional({ example: 'Venta a cliente VIP' })
   @IsString()

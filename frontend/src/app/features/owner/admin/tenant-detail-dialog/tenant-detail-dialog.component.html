@@ -18,7 +18,7 @@
 
   <div class="info-row">
     <span class="label">Creado</span>
-    <span>{{ tenant.createdAt | date:'dd/MM/yyyy' }}</span>
+    <span>{{ tenant.createdAt | date:'dd/MM/yyyy':'UTC' }}</span>
   </div>
 
   <div class="owners-section">

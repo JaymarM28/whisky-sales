@@ -65,11 +65,24 @@
       <mat-error>El precio de venta es obligatorio</mat-error>
     </mat-form-field>
 
+    <p class="section-label">Precios negocio (dejar en 0 si no aplica)</p>
+
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Precio negocio / mayorista (COP)</mat-label>
+      <mat-label>Precio negocio 1 (COP)</mat-label>
       <input matInput type="number" formControlName="businessPrice" min="0" />
       <mat-icon matPrefix>business</mat-icon>
-      <mat-hint>Precio especial para clientes negocio (dejar en 0 si no aplica)</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Precio negocio 2 (COP)</mat-label>
+      <input matInput type="number" formControlName="businessPrice2" min="0" />
+      <mat-icon matPrefix>business</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Precio negocio 3 (COP)</mat-label>
+      <input matInput type="number" formControlName="businessPrice3" min="0" />
+      <mat-icon matPrefix>business</mat-icon>
     </mat-form-field>
 
   </form>

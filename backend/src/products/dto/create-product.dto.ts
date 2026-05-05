@@ -39,9 +39,21 @@ export class CreateProductDto {
   @IsPositive()
   salePrice: number;
 
-  @ApiProperty({ example: 160000, description: 'Precio para clientes negocio/mayorista (0 = no aplica)', required: false })
+  @ApiProperty({ example: 160000, description: 'Precio negocio 1 (0 = no aplica)', required: false })
   @IsInt()
   @Min(0)
   @IsOptional()
   businessPrice?: number;
+
+  @ApiProperty({ example: 155000, description: 'Precio negocio 2 (0 = no aplica)', required: false })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  businessPrice2?: number;
+
+  @ApiProperty({ example: 150000, description: 'Precio negocio 3 (0 = no aplica)', required: false })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  businessPrice3?: number;
 }

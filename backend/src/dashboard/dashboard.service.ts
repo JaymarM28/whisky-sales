@@ -5,6 +5,17 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
+  private getPrecioVenta(sale: any): number {
+    if (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot) return sale.businessPriceSnapshot;
+    if (sale.clientType === 'BUSINESS_2' && sale.businessPrice2Snapshot) return sale.businessPrice2Snapshot;
+    if (sale.clientType === 'BUSINESS_3' && sale.businessPrice3Snapshot) return sale.businessPrice3Snapshot;
+    return sale.salePriceSnapshot ?? sale.product.salePrice;
+  }
+
+  private esNegocio(sale: any): boolean {
+    return ['BUSINESS', 'BUSINESS_2', 'BUSINESS_3'].includes(sale.clientType);
+  }
+
   async getOwnerDashboard(tenantId: string) {
     const ventasPendientes = await this.prisma.sale.count({
       where: { tenantId, status: 'PENDING' },
@@ -18,28 +29,23 @@ export class DashboardService {
     });
     const totalVentasConfirmadas = ventasConfirmadas.length;
 
-    const precioReal = (sale: any): number =>
-      (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
-        ? sale.businessPriceSnapshot
-        : (sale.salePriceSnapshot ?? sale.product.salePrice);
-
     const gananciaBruta = ventasConfirmadas.reduce((acc, sale) => {
       const costo = sale.costPriceSnapshot ?? sale.product.costPrice;
-      return acc + (precioReal(sale) - costo) * sale.quantity;
+      return acc + (this.getPrecioVenta(sale) - costo) * sale.quantity;
     }, 0);
 
     const ventasPorTipo = {
       consumidor: {
-        count: ventasConfirmadas.filter(s => s.clientType !== 'BUSINESS').length,
+        count: ventasConfirmadas.filter(s => !this.esNegocio(s)).length,
         ingresos: ventasConfirmadas
-          .filter(s => s.clientType !== 'BUSINESS')
-          .reduce((acc, s) => acc + precioReal(s) * s.quantity, 0),
+          .filter(s => !this.esNegocio(s))
+          .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0),
       },
       negocio: {
-        count: ventasConfirmadas.filter(s => s.clientType === 'BUSINESS').length,
+        count: ventasConfirmadas.filter(s => this.esNegocio(s)).length,
         ingresos: ventasConfirmadas
-          .filter(s => s.clientType === 'BUSINESS')
-          .reduce((acc, s) => acc + precioReal(s) * s.quantity, 0),
+          .filter(s => this.esNegocio(s))
+          .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0),
       },
     };
 
@@ -58,11 +64,8 @@ export class DashboardService {
       });
 
       const generada = ventas.reduce((acc, sale) => {
-        const precio = (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
-          ? sale.businessPriceSnapshot
-          : (sale.salePriceSnapshot ?? sale.product.salePrice);
         const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
-        const margenSocio = (precio - precioSocio) * sale.quantity;
+        const margenSocio = (this.getPrecioVenta(sale) - precioSocio) * sale.quantity;
         return acc + margenSocio * (partner.commissionPct / 100);
       }, 0);
 
@@ -233,23 +236,17 @@ export class DashboardService {
 
     // Ingresos por tipo de cliente
     const ingresoConsumidor = ventasConfirmadas
-      .filter(s => s.clientType !== 'BUSINESS')
-      .reduce((acc, s) => acc + (s.salePriceSnapshot ?? s.product.salePrice) * s.quantity, 0);
+      .filter(s => !this.esNegocio(s))
+      .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0);
     const ingresoNegocio = ventasConfirmadas
-      .filter(s => s.clientType === 'BUSINESS')
-      .reduce((acc, s) => {
-        const p = (s.businessPriceSnapshot) ? s.businessPriceSnapshot : (s.salePriceSnapshot ?? s.product.salePrice);
-        return acc + p * s.quantity;
-      }, 0);
+      .filter(s => this.esNegocio(s))
+      .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0);
 
     // Comisión
     const comisionGenerada = ventasConfirmadas.reduce((acc, sale) => {
-      const precio = (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
-        ? sale.businessPriceSnapshot
-        : (sale.salePriceSnapshot ?? sale.product.salePrice);
       const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
-      const margenSocio = (precio - precioSocio) * sale.quantity;
-      return acc + margenSocio * (partner.commissionPct / 100);
+      const margenSocio = (this.getPrecioVenta(sale) - precioSocio) * sale.quantity;
+      return acc + margenSocio * (partner!.commissionPct / 100);
     }, 0);
 
     const pagado = await this.prisma.commissionPayment.aggregate({
@@ -273,8 +270,8 @@ export class DashboardService {
         totalIngresos: Math.round(ingresoConsumidor + ingresoNegocio),
         ingresoConsumidor: Math.round(ingresoConsumidor),
         ingresoNegocio: Math.round(ingresoNegocio),
-        ventasConsumidor: ventasConfirmadas.filter(s => s.clientType !== 'BUSINESS').length,
-        ventasNegocio: ventasConfirmadas.filter(s => s.clientType === 'BUSINESS').length,
+        ventasConsumidor: ventasConfirmadas.filter(s => !this.esNegocio(s)).length,
+        ventasNegocio: ventasConfirmadas.filter(s => this.esNegocio(s)).length,
         // Inventario y últimas ventas
         inventario: inventario.filter((i) => i.disponible > 0),
         ultimasVentas: ultimasVentas.map(v => ({
