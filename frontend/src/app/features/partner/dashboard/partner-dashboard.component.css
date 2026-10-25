@@ -1,6 +1,6 @@
 /* ── Comisión banner ── */
 .comision-banner {
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
 .comision-card {
@@ -77,8 +77,8 @@
   margin-bottom: 8px;
 }
 
-.kpi-grid-3 {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.kpi-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .kpi-card mat-card-content {
@@ -113,9 +113,6 @@
 .kpi-icon.rendimiento { background: #E3F2FD; }
 .kpi-icon.rendimiento mat-icon { color: #1565C0; }
 
-.kpi-icon.ingresos  { background: #F3E5F5; }
-.kpi-icon.ingresos mat-icon { color: #6A1B9A; }
-
 .kpi-icon.negocio   { background: #EDE7F6; }
 .kpi-icon.negocio mat-icon { color: #4527A0; }
 
@@ -133,10 +130,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.kpi-ingresos .kpi-value {
-  color: #6A1B9A;
 }
 
 .kpi-label {

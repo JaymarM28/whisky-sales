@@ -1,0 +1,19 @@
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+mat-form-field {
+  margin-bottom: 8px;
+}
+
+.ayuda {
+  font-size: 13px;
+  color: rgba(0, 0, 0, .55);
+  margin: 0 0 16px;
+}
+
+.hint-error {
+  color: #dc2626;
+}

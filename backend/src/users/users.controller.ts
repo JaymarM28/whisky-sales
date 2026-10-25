@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateMyEmailDto } from './dto/update-my-email.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { AdminGuard } from '../auth/admin.guard';
@@ -55,6 +56,12 @@ export class UsersController {
   @Patch('me/pin')
   updateMyPin(@Body('pin') pin: string, @Request() req) {
     return this.usersService.updateMyPin(req.user.id, pin);
+  }
+
+  @ApiOperation({ summary: 'Cambiar email propio' })
+  @Patch('me/email')
+  updateMyEmail(@Body() dto: UpdateMyEmailDto, @Request() req) {
+    return this.usersService.updateMyEmail(req.user.id, dto);
   }
 
   @ApiOperation({ summary: 'Editar socio' })

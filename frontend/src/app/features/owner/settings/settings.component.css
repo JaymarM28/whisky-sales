@@ -6,6 +6,7 @@
 
 .settings-card {
   max-width: 480px;
+  margin-bottom: 16px;
 }
 
 mat-card-title {

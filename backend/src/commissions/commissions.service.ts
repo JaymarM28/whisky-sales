@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateCommissionDto } from './dto/create-commission.dto';
+import { precioVentaUnitario } from '../common/utils/sale-price';
 
 @Injectable()
 export class CommissionsService {
@@ -67,15 +68,7 @@ export class CommissionsService {
     });
 
     const generada = ventas.reduce((acc, sale) => {
-      let precioVenta: number;
-      if (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot)
-        precioVenta = sale.businessPriceSnapshot;
-      else if (sale.clientType === 'BUSINESS_2' && sale.businessPrice2Snapshot)
-        precioVenta = sale.businessPrice2Snapshot;
-      else if (sale.clientType === 'BUSINESS_3' && sale.businessPrice3Snapshot)
-        precioVenta = sale.businessPrice3Snapshot;
-      else
-        precioVenta = sale.salePriceSnapshot ?? sale.product.salePrice;
+      const precioVenta = precioVentaUnitario(sale);
 
       const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
       const margenSocio = (precioVenta - precioSocio) * sale.quantity;

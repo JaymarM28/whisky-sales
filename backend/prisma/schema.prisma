@@ -17,6 +17,8 @@ model Tenant {
   commissionPayments CommissionPayment[]
   deliveries         Delivery[]
   products           Product[]
+  purchases          Purchase[]
+  returns            StockReturn[]
   sales              Sale[]
   users              User[]
   transfers          Transfer[]
@@ -35,8 +37,11 @@ model User {
   tenantId           String?
   isAdmin            Boolean             @default(false)
   email              String?             @unique
+  resetToken         String?
+  resetTokenExp      DateTime?
   commissionPayments CommissionPayment[]
   deliveries         Delivery[]
+  returns            StockReturn[]
   sales              Sale[]
   tenant             Tenant?             @relation(fields: [tenantId], references: [id])
   transfersFrom      Transfer[]          @relation("TransferFrom")
@@ -59,11 +64,30 @@ model Product {
   businessPrice2 Int        @default(0)
   businessPrice3 Int        @default(0)
   deliveries     Delivery[]
+  purchases      Purchase[]
+  returns        StockReturn[]
   tenant        Tenant?    @relation(fields: [tenantId], references: [id])
   sales         Sale[]
   transfers     Transfer[]
 
   @@unique([tenantId, reference])
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  productId String
+  quantity  Int
+  unitCost  Int
+  totalCost Int
+  supplier  String?
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, productId])
 }
 
 model Delivery {
@@ -78,6 +102,23 @@ model Delivery {
   partner   User     @relation(fields: [partnerId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
   tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+/// Devolución de un socio a la bodega del dueño (inverso de una entrega)
+model StockReturn {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  partnerId String
+  productId String
+  quantity  Int
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+  partner   User     @relation(fields: [partnerId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, partnerId, productId])
 }
 
 model Sale {

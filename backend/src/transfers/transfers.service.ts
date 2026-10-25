@@ -7,12 +7,14 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateTransferDto } from './dto/create-transfer.dto';
+import { InventoryService } from '../inventory/inventory.service';
 
 @Injectable()
 export class TransfersService {
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
+    private inventory: InventoryService,
   ) {}
 
   async findAll(
@@ -100,35 +102,7 @@ export class TransfersService {
     });
     if (!product) throw new NotFoundException('Producto no encontrado');
 
-    const [delivered, sold, transfersOut, transfersIn] = await Promise.all([
-      this.prisma.delivery.aggregate({
-        where: { tenantId, partnerId: fromPartnerId, productId: dto.productId },
-        _sum: { quantity: true },
-      }),
-      this.prisma.sale.aggregate({
-        where: {
-          tenantId,
-          partnerId: fromPartnerId,
-          productId: dto.productId,
-          status: { in: ['CONFIRMED', 'PENDING'] },
-        },
-        _sum: { quantity: true },
-      }),
-      this.prisma.transfer.aggregate({
-        where: { tenantId, fromPartnerId, productId: dto.productId },
-        _sum: { quantity: true },
-      }),
-      this.prisma.transfer.aggregate({
-        where: { tenantId, toPartnerId: fromPartnerId, productId: dto.productId },
-        _sum: { quantity: true },
-      }),
-    ]);
-
-    const available =
-      (delivered._sum.quantity || 0) -
-      (sold._sum.quantity || 0) -
-      (transfersOut._sum.quantity || 0) +
-      (transfersIn._sum.quantity || 0);
+    const available = await this.inventory.getDisponible(fromPartnerId, dto.productId, tenantId);
 
     if (available < dto.quantity) {
       throw new BadRequestException(
@@ -180,8 +154,17 @@ export class TransfersService {
     if (role !== 'OWNER') {
       throw new ForbiddenException('Solo el owner puede eliminar traspasos');
     }
-    const result = await this.prisma.transfer.deleteMany({ where: { id, tenantId } });
-    if (result.count === 0) throw new NotFoundException('Traspaso no encontrado');
+    const existing = await this.prisma.transfer.findFirst({ where: { id, tenantId } });
+    if (!existing) throw new NotFoundException('Traspaso no encontrado');
+
+    const disponible = await this.inventory.getDisponible(existing.toPartnerId, existing.productId, tenantId);
+    if (disponible < existing.quantity) {
+      throw new BadRequestException(
+        `No se puede eliminar: el socio receptor ya vendió o traspasó parte de estas unidades (le quedan ${disponible} de ${existing.quantity}).`,
+      );
+    }
+
+    await this.prisma.transfer.delete({ where: { id } });
     return { data: null, error: null, message: 'Traspaso eliminado exitosamente' };
   }
 }

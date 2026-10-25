@@ -26,7 +26,21 @@
               <span class="kpi-value">{{ rentabilidad.totales.totalUnidades | number }}</span>
               <span class="kpi-label">Unidades vendidas</span>
             </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon amber">payments</mat-icon>
+              <span class="kpi-value">{{ rentabilidad.totales.totalIngresos | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span class="kpi-label">Ingresos por ventas</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon blue">shopping_cart</mat-icon>
+              <span class="kpi-value">{{ rentabilidad.totales.totalInvertido | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span class="kpi-label">Invertido en compras</span>
+            </mat-card>
           </div>
+          <p class="nota-rent">
+            El costo por botella es el promedio de lo que pagaste en tus compras. La ganancia de cada venta usa el costo
+            vigente cuando se reportó y el precio según el tipo de cliente.
+          </p>
 
           <!-- Tabla -->
           <mat-card>
@@ -42,7 +56,7 @@
                 </ng-container>
 
                 <ng-container matColumnDef="costPrice">
-                  <th mat-header-cell *matHeaderCellDef>Costo botella</th>
+                  <th mat-header-cell *matHeaderCellDef>Costo real botella</th>
                   <td mat-cell *matCellDef="let r">{{ r.costPrice | currency:'COP':'symbol':'1.0-0' }}</td>
                 </ng-container>
 
@@ -283,8 +297,23 @@
                   <td mat-cell *matCellDef="let r">{{ r.totalVendido | number }} u</td>
                 </ng-container>
 
+                <ng-container matColumnDef="totalComprado">
+                  <th mat-header-cell *matHeaderCellDef>Comprado</th>
+                  <td mat-cell *matCellDef="let r">{{ r.totalComprado | number }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="enBodega">
+                  <th mat-header-cell *matHeaderCellDef>En bodega</th>
+                  <td mat-cell *matCellDef="let r">{{ r.enBodega | number }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="enSocios">
+                  <th mat-header-cell *matHeaderCellDef>En socios</th>
+                  <td mat-cell *matCellDef="let r">{{ r.enSocios | number }}</td>
+                </ng-container>
+
                 <ng-container matColumnDef="disponible">
-                  <th mat-header-cell *matHeaderCellDef>Disponible</th>
+                  <th mat-header-cell *matHeaderCellDef>Total disponible</th>
                   <td mat-cell *matCellDef="let r">{{ r.disponible | number }} u</td>
                 </ng-container>
 
@@ -339,6 +368,16 @@
               <mat-icon class="kpi-icon blue">liquor</mat-icon>
               <span class="kpi-value">{{ inventario.totales.totalDisponible | number }}</span>
               <span class="kpi-label">Botellas disponibles</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon amber">warehouse</mat-icon>
+              <span class="kpi-value">{{ inventario.totales.totalEnBodega | number }}</span>
+              <span class="kpi-label">En bodega</span>
+            </mat-card>
+            <mat-card class="kpi-card">
+              <mat-icon class="kpi-icon blue">shopping_cart</mat-icon>
+              <span class="kpi-value">{{ inventario.totales.totalInvertido | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span class="kpi-label">Total invertido en compras</span>
             </mat-card>
             <mat-card class="kpi-card">
               <mat-icon class="kpi-icon amber">account_balance_wallet</mat-icon>
@@ -416,6 +455,41 @@
 
           <p *ngIf="inventarioSocios.length === 0" class="empty-state">Sin socios registrados</p>
 
+          <!-- Resumen rápido de stock -->
+          <div *ngIf="inventarioSocios.length > 0" class="resumen-stock-card">
+            <h3 class="resumen-title">
+              <mat-icon>inventory_2</mat-icon> Resumen de stock por socio
+            </h3>
+            <table class="resumen-table">
+              <thead>
+                <tr>
+                  <th>Socio</th>
+                  <th>Producto</th>
+                  <th class="col-num">Disponible</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let s of inventarioSocios">
+                  <tr *ngFor="let p of s.productos; let i = index"
+                      [class.row-alert]="p.disponible <= 0"
+                      [class.row-ok]="p.disponible > 0">
+                    <td class="cell-socio">
+                      <span *ngIf="i === 0">{{ s.socio.name }}</span>
+                    </td>
+                    <td>{{ p.producto.name }}</td>
+                    <td class="col-num" [class.text-red]="p.disponible <= 0" [class.text-green]="p.disponible > 0">
+                      <strong>{{ p.disponible }}</strong>
+                    </td>
+                  </tr>
+                  <tr *ngIf="s.productos.length === 0">
+                    <td>{{ s.socio.name }}</td>
+                    <td colspan="2" class="empty-cell">Sin actividad</td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+
           <mat-accordion multi>
             <mat-expansion-panel *ngFor="let s of inventarioSocios" class="socio-panel">
 
@@ -459,6 +533,10 @@
                   <span class="sk-val blue">{{ s.totales.traspasosIn }}</span>
                   <span class="sk-lbl">Traspasos entrada</span>
                 </div>
+                <div class="sk-item" *ngIf="s.totales.devoluciones > 0">
+                  <span class="sk-val red">{{ s.totales.devoluciones }}</span>
+                  <span class="sk-lbl">Devoluciones</span>
+                </div>
                 <div class="sk-item highlight">
                   <span class="sk-val">{{ s.totales.disponible }}</span>
                   <span class="sk-lbl">Disponible</span>
@@ -474,8 +552,8 @@
 
                   <mat-expansion-panel-header>
                     <mat-panel-title class="prod-title">
-                      <span>{{ p.producto.nombre }}</span>
-                      <span class="ref-badge">{{ p.producto.referencia }}</span>
+                      <span>{{ p.producto.name }}</span>
+                      <span class="ref-badge">{{ p.producto.reference }}</span>
                     </mat-panel-title>
                     <mat-panel-description class="prod-desc">
                       <span [class.red-text]="p.disponible <= 0" [class.green-text]="p.disponible > 0">

@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>
+  <mat-icon>assignment_return</mat-icon>
+  Registrar devolución
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="ayuda">El socio te regresa botellas a bodega. Se descuentan de su inventario.</p>
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Socio</mat-label>
+      <mat-select formControlName="partnerId" (selectionChange)="onSocioChange()">
+        <mat-option *ngFor="let socio of data.socios" [value]="socio.id">{{ socio.name }}</mat-option>
+      </mat-select>
+      <mat-error>Selecciona un socio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Producto</mat-label>
+      <mat-select formControlName="productId">
+        <mat-option *ngFor="let item of inventario" [value]="item.product.id">
+          {{ item.product.name }} ({{ item.available }} disponibles)
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="cargandoInventario">Cargando inventario del socio…</mat-hint>
+      <mat-hint *ngIf="!cargandoInventario && form.value.partnerId && inventario.length === 0" class="hint-error">
+        Este socio no tiene unidades para devolver
+      </mat-hint>
+      <mat-error>Selecciona un producto</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Cantidad</mat-label>
+      <input matInput type="number" formControlName="quantity" min="1" />
+      <mat-hint *ngIf="disponible !== null" [class.hint-error]="excede">
+        El socio tiene {{ disponible }}{{ excede ? ' — no puede devolver más' : '' }}
+      </mat-hint>
+      <mat-error>La cantidad debe ser mayor a 0</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha</mat-label>
+      <input matInput type="date" formControlName="date" />
+      <mat-error>La fecha es obligatoria</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notas (opcional)</mat-label>
+      <textarea matInput formControlName="notes" rows="2"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid || excede || guardando">
+    {{ guardando ? 'Guardando...' : 'Registrar' }}
+  </button>
+</mat-dialog-actions>

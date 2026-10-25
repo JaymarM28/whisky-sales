@@ -30,7 +30,7 @@ export class ReportsComponent implements OnInit {
   // Inventario
   inventario: any = null;
   cargandoInv = true;
-  columnasInv = ['nombre', 'disponible', 'cajasDisponibles', 'rotacionPct', 'inversionDisponible', 'bajoStock'];
+  columnasInv = ['nombre', 'totalComprado', 'enBodega', 'enSocios', 'disponible', 'cajasDisponibles', 'rotacionPct', 'inversionDisponible', 'bajoStock'];
 
   // Inventario por socio
   inventarioSocios: any[] = [];
@@ -112,6 +112,7 @@ export class ReportsComponent implements OnInit {
       VENTA_PEND: 'Venta pendiente',
       TRASPASO_SALIDA: 'Traspaso salida',
       TRASPASO_ENTRADA: 'Traspaso entrada',
+      DEVOLUCION: 'Devolución a bodega',
     };
     return map[tipo] ?? tipo;
   }
@@ -123,6 +124,7 @@ export class ReportsComponent implements OnInit {
       VENTA_PEND: 'chip-pendiente',
       TRASPASO_SALIDA: 'chip-traspaso-out',
       TRASPASO_ENTRADA: 'chip-traspaso-in',
+      DEVOLUCION: 'chip-devolucion',
     };
     return map[tipo] ?? '';
   }

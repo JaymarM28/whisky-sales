@@ -76,8 +76,8 @@ export class TransfersComponent implements OnInit {
             this.snackBar.open('Traspaso eliminado', 'Cerrar', { duration: 3000 });
             this.cargarTraspasos();
           },
-          error: () => {
-            this.snackBar.open('Error al eliminar traspaso', 'Cerrar', { duration: 3000 });
+          error: (err) => {
+            this.snackBar.open(err.error?.error || 'Error al eliminar traspaso', 'Cerrar', { duration: 5000 });
           },
         });
       }

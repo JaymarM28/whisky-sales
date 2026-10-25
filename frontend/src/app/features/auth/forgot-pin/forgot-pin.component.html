@@ -1,0 +1,78 @@
+<div class="login-page">
+
+  <!-- Panel izquierdo: branding -->
+  <div class="brand-panel">
+    <div class="brand-content">
+      <mat-icon class="brand-icon">liquor</mat-icon>
+      <h1 class="brand-title">Sales Manager</h1>
+      <p class="brand-sub">Gestión de ventas y comisiones para tu equipo comercial</p>
+    </div>
+  </div>
+
+  <!-- Panel derecho -->
+  <div class="form-panel">
+    <div class="form-wrapper">
+
+      <div class="mobile-header">
+        <mat-icon class="mobile-icon">liquor</mat-icon>
+        <span class="mobile-title">Sales Manager</span>
+      </div>
+
+      <!-- Paso 1: solicitar enlace -->
+      <ng-container *ngIf="!enviado">
+        <div class="step-header">
+          <div class="step-badge"><mat-icon>lock_reset</mat-icon></div>
+          <h2 class="form-title">Recuperar PIN</h2>
+          <p class="form-subtitle">Ingresa tu cédula y te enviaremos un enlace al email registrado para crear un nuevo PIN.</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="enviar()">
+          <mat-form-field appearance="outline" class="field">
+            <mat-label>Cédula</mat-label>
+            <mat-icon matPrefix>badge</mat-icon>
+            <input matInput formControlName="cedula" inputmode="numeric" autocomplete="username" />
+            <mat-error>La cédula es obligatoria</mat-error>
+          </mat-form-field>
+
+          <button mat-flat-button class="btn-submit" type="submit" [disabled]="form.invalid || enviando">
+            <mat-spinner *ngIf="enviando" diameter="20"></mat-spinner>
+            <span *ngIf="!enviando">Enviar enlace</span>
+          </button>
+        </form>
+
+        <div class="tip">
+          <mat-icon>info</mat-icon>
+          <span>¿No tienes email registrado? Pídele al administrador que restablezca tu PIN.</span>
+        </div>
+      </ng-container>
+
+      <!-- Paso 2: enlace enviado -->
+      <ng-container *ngIf="enviado">
+        <div class="step-header">
+          <div class="step-badge success"><mat-icon>mark_email_read</mat-icon></div>
+          <h2 class="form-title">Revisa tu correo</h2>
+          <p class="form-subtitle">
+            Si la cédula tiene un email registrado, recibirás un enlace en los próximos minutos.
+            El enlace vence en 30 minutos.
+          </p>
+        </div>
+
+        <div class="tip">
+          <mat-icon>help_outline</mat-icon>
+          <span>¿No te llegó? Revisa la carpeta de spam o solicita un nuevo enlace.</span>
+        </div>
+
+        <button mat-stroked-button class="btn-secondary" type="button" (click)="reintentar()">
+          Solicitar otro enlace
+        </button>
+      </ng-container>
+
+      <hr class="divider" />
+      <a routerLink="/login" class="back-link">
+        <mat-icon>arrow_back</mat-icon> Volver al inicio de sesión
+      </a>
+
+    </div>
+  </div>
+
+</div>

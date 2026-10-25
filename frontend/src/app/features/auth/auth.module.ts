@@ -12,12 +12,16 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthRoutingModule } from './auth-routing.module';
 import { LoginComponent } from './login/login.component';
 import { PinDialogComponent } from './pin-dialog/pin-dialog.component';
+import { ForgotPinComponent } from './forgot-pin/forgot-pin.component';
+import { ResetPinComponent } from './reset-pin/reset-pin.component';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
-  declarations: [LoginComponent, PinDialogComponent],
+  declarations: [LoginComponent, PinDialogComponent, ForgotPinComponent, ResetPinComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterModule,
     AuthRoutingModule,
     MatCardModule,
     MatButtonModule,

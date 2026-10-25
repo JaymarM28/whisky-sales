@@ -14,3 +14,15 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+.acciones-header {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tab-ayuda {
+  font-size: 13px;
+  color: rgba(0, 0, 0, .55);
+  margin: 16px 0 8px;
+}

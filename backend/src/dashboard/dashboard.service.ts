@@ -1,150 +1,98 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { InventoryService } from '../inventory/inventory.service';
+import { precioVentaUnitario, esVentaNegocio } from '../common/utils/sale-price';
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private inventory: InventoryService,
+  ) {}
 
   private getPrecioVenta(sale: any): number {
-    if (sale.clientType === 'BUSINESS' && sale.businessPriceSnapshot) return sale.businessPriceSnapshot;
-    if (sale.clientType === 'BUSINESS_2' && sale.businessPrice2Snapshot) return sale.businessPrice2Snapshot;
-    if (sale.clientType === 'BUSINESS_3' && sale.businessPrice3Snapshot) return sale.businessPrice3Snapshot;
-    return sale.salePriceSnapshot ?? sale.product.salePrice;
+    return precioVentaUnitario(sale);
   }
 
   private esNegocio(sale: any): boolean {
-    return ['BUSINESS', 'BUSINESS_2', 'BUSINESS_3'].includes(sale.clientType);
+    return esVentaNegocio(sale);
   }
 
   async getOwnerDashboard(tenantId: string) {
-    const ventasPendientes = await this.prisma.sale.count({
-      where: { tenantId, status: 'PENDING' },
-    });
-
-    const ventasConfirmadas = await this.prisma.sale.findMany({
-      where: { tenantId, status: 'CONFIRMED' },
-      include: {
-        product: { select: { costPrice: true, salePrice: true, businessPrice: true } },
-      },
-    });
-    const totalVentasConfirmadas = ventasConfirmadas.length;
+    const [ventasPendientes, ventasConfirmadas, partners, products, pagos, compras, entregado, devuelto, movimientos] =
+      await Promise.all([
+        this.prisma.sale.count({ where: { tenantId, status: 'PENDING' } }),
+        this.prisma.sale.findMany({
+          where: { tenantId, status: 'CONFIRMED' },
+          include: { product: { select: { costPrice: true, salePrice: true, partnerPrice: true } } },
+        }),
+        this.prisma.user.findMany({
+          where: { tenantId, role: 'PARTNER', active: true },
+          select: { id: true, name: true, commissionPct: true },
+        }),
+        this.prisma.product.findMany({ where: { tenantId, active: true }, select: { id: true, name: true } }),
+        this.prisma.commissionPayment.groupBy({ by: ['partnerId'], where: { tenantId }, _sum: { amount: true } }),
+        this.prisma.purchase.aggregate({ where: { tenantId }, _sum: { quantity: true, totalCost: true } }),
+        this.prisma.delivery.aggregate({ where: { tenantId }, _sum: { quantity: true } }),
+        this.prisma.stockReturn.aggregate({ where: { tenantId }, _sum: { quantity: true } }),
+        this.inventory.getMovimientosNegocio(tenantId),
+      ]);
 
     const gananciaBruta = ventasConfirmadas.reduce((acc, sale) => {
       const costo = sale.costPriceSnapshot ?? sale.product.costPrice;
       return acc + (this.getPrecioVenta(sale) - costo) * sale.quantity;
     }, 0);
 
-    const ventasPorTipo = {
-      consumidor: {
-        count: ventasConfirmadas.filter(s => !this.esNegocio(s)).length,
-        ingresos: ventasConfirmadas
-          .filter(s => !this.esNegocio(s))
-          .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0),
-      },
-      negocio: {
-        count: ventasConfirmadas.filter(s => this.esNegocio(s)).length,
-        ingresos: ventasConfirmadas
-          .filter(s => this.esNegocio(s))
-          .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0),
-      },
-    };
+    const consumidor = ventasConfirmadas.filter((s) => !this.esNegocio(s));
+    const negocio = ventasConfirmadas.filter((s) => this.esNegocio(s));
+    const ingresos = (ventas: typeof ventasConfirmadas) =>
+      ventas.reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0);
 
-    const partners = await this.prisma.user.findMany({
-      where: { tenantId, role: 'PARTNER', active: true },
-      select: { id: true, name: true, commissionPct: true },
-    });
-
+    // Comisiones de socios activos: generada por sus ventas confirmadas, pagada según sus pagos
     let comisionesTotalGeneradas = 0;
     let comisionesTotalPagadas = 0;
-
     for (const partner of partners) {
-      const ventas = await this.prisma.sale.findMany({
-        where: { tenantId, partnerId: partner.id, status: 'CONFIRMED' },
-        include: { product: { select: { partnerPrice: true, salePrice: true } } },
-      });
-
-      const generada = ventas.reduce((acc, sale) => {
-        const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
-        const margenSocio = (this.getPrecioVenta(sale) - precioSocio) * sale.quantity;
-        return acc + margenSocio * (partner.commissionPct / 100);
-      }, 0);
-
-      const pagada = await this.prisma.commissionPayment.aggregate({
-        where: { tenantId, partnerId: partner.id },
-        _sum: { amount: true },
-      });
-
-      comisionesTotalGeneradas += generada;
-      comisionesTotalPagadas += pagada._sum.amount || 0;
+      comisionesTotalGeneradas += ventasConfirmadas
+        .filter((sale) => sale.partnerId === partner.id)
+        .reduce((acc, sale) => {
+          const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
+          const margenSocio = (this.getPrecioVenta(sale) - precioSocio) * sale.quantity;
+          return acc + margenSocio * (partner.commissionPct / 100);
+        }, 0);
+      comisionesTotalPagadas += pagos.find((p) => p.partnerId === partner.id)?._sum.amount || 0;
     }
 
     const comisionesPendientes = comisionesTotalGeneradas - comisionesTotalPagadas;
     const gananciaNeta = gananciaBruta - comisionesTotalPagadas;
 
-    const inventarioGlobal = await this.prisma.delivery.aggregate({
-      where: { tenantId },
-      _sum: { quantity: true },
-    });
-
-    const inventarioVendido = await this.prisma.sale.aggregate({
-      where: { tenantId, status: 'CONFIRMED' },
-      _sum: { quantity: true },
-    });
+    const totalEntregado = entregado._sum.quantity || 0;
+    const totalVendido = ventasConfirmadas.reduce((acc, s) => acc + s.quantity, 0);
+    const totalDevuelto = devuelto._sum.quantity || 0;
+    const totalComprado = compras._sum.quantity || 0;
 
     // Inventario por socio (para la tabla)
-    const inventarioPorSocio = await Promise.all(
-      partners.map(async (partner) => {
-        const products = await this.prisma.product.findMany({
-          where: { tenantId, active: true },
-          select: { id: true, name: true },
-        });
-
-        const items = await Promise.all(
-          products.map(async (product) => {
-            const [entregado, vendido, transferOut, transferIn] = await Promise.all([
-              this.prisma.delivery.aggregate({
-                where: { tenantId, partnerId: partner.id, productId: product.id },
-                _sum: { quantity: true },
-              }),
-              this.prisma.sale.aggregate({
-                where: { tenantId, partnerId: partner.id, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
-                _sum: { quantity: true },
-              }),
-              this.prisma.transfer.aggregate({
-                where: { tenantId, fromPartnerId: partner.id, productId: product.id },
-                _sum: { quantity: true },
-              }),
-              this.prisma.transfer.aggregate({
-                where: { tenantId, toPartnerId: partner.id, productId: product.id },
-                _sum: { quantity: true },
-              }),
-            ]);
-            const disponible =
-              (entregado._sum.quantity || 0) -
-              (vendido._sum.quantity || 0) -
-              (transferOut._sum.quantity || 0) +
-              (transferIn._sum.quantity || 0);
-            return {
-              socio: partner.name,
-              producto: product.name,
-              entregado: entregado._sum.quantity || 0,
-              vendido: vendido._sum.quantity || 0,
-              disponible,
-            };
-          }),
-        );
-
-        return items.filter((i) => i.entregado > 0 || i.disponible > 0);
-      }),
+    const inventarioPorSocio = partners.flatMap((partner) =>
+      products
+        .map((product) => {
+          const m = this.inventory.movimientosDe(movimientos, partner.id, product.id);
+          return {
+            socio: partner.name,
+            producto: product.name,
+            entregado: m.entregado,
+            vendido: m.vendido,
+            disponible: m.disponible,
+          };
+        })
+        .filter((i) => i.entregado > 0 || i.disponible > 0),
     );
 
     return {
       data: {
         ventasPendientes,
-        ventasConfirmadas: totalVentasConfirmadas,
+        ventasConfirmadas: ventasConfirmadas.length,
         ventasPorTipo: {
-          consumidor: { count: ventasPorTipo.consumidor.count, ingresos: Math.round(ventasPorTipo.consumidor.ingresos) },
-          negocio: { count: ventasPorTipo.negocio.count, ingresos: Math.round(ventasPorTipo.negocio.ingresos) },
+          consumidor: { count: consumidor.length, ingresos: Math.round(ingresos(consumidor)) },
+          negocio: { count: negocio.length, ingresos: Math.round(ingresos(negocio)) },
         },
         gananciaBruta: Math.round(gananciaBruta),
         gananciaNeta: Math.round(gananciaNeta),
@@ -152,12 +100,15 @@ export class DashboardService {
         comisionesPagadas: Math.round(comisionesTotalPagadas),
         comisionesPendientes: Math.round(comisionesPendientes),
         inventarioGlobal: {
-          totalEntregado: inventarioGlobal._sum.quantity || 0,
-          totalVendido: inventarioVendido._sum.quantity || 0,
-          disponible:
-            (inventarioGlobal._sum.quantity || 0) - (inventarioVendido._sum.quantity || 0),
+          totalComprado,
+          totalInvertido: compras._sum.totalCost || 0,
+          enBodega: totalComprado - totalEntregado + totalDevuelto,
+          totalEntregado,
+          totalVendido,
+          totalDevuelto,
+          disponible: totalEntregado - totalVendido - totalDevuelto,
         },
-        inventarioPorSocio: inventarioPorSocio.flat(),
+        inventarioPorSocio,
       },
       error: null,
       message: null,
@@ -165,89 +116,54 @@ export class DashboardService {
   }
 
   async getPartnerDashboard(partnerId: string, tenantId: string) {
-    const partner = await this.prisma.user.findFirst({
-      where: { id: partnerId, tenantId },
-      select: { commissionPct: true, name: true },
-    });
+    const [partner, products, movimientos, ventasConfirmadas, ultimasVentas, ventasPendientesCount, totalEntregado, devueltoSocio] =
+      await Promise.all([
+        this.prisma.user.findFirst({ where: { id: partnerId, tenantId }, select: { commissionPct: true, name: true } }),
+        this.prisma.product.findMany({ where: { tenantId, active: true }, select: { id: true, name: true } }),
+        this.inventory.getMovimientosNegocio(tenantId, partnerId),
+        // Ventas confirmadas (para comisión)
+        this.prisma.sale.findMany({
+          where: { tenantId, partnerId, status: 'CONFIRMED' },
+          include: { product: { select: { partnerPrice: true, salePrice: true } } },
+        }),
+        // Últimas 5 ventas (cualquier estado)
+        this.prisma.sale.findMany({
+          where: { tenantId, partnerId },
+          include: { product: { select: { name: true } } },
+          orderBy: { date: 'desc' },
+          take: 5,
+        }),
+        this.prisma.sale.count({ where: { tenantId, partnerId, status: 'PENDING' } }),
+        this.prisma.delivery.aggregate({ where: { tenantId, partnerId }, _sum: { quantity: true } }),
+        this.prisma.stockReturn.aggregate({ where: { tenantId, partnerId }, _sum: { quantity: true } }),
+      ]);
 
-    const products = await this.prisma.product.findMany({
-      where: { tenantId, active: true },
-    });
+    // Inventario disponible por producto (incluye traspasos y devoluciones)
+    const inventario = products.map((product) => ({
+      product: { id: product.id, name: product.name },
+      disponible: this.inventory.movimientosDe(movimientos, partnerId, product.id).disponible,
+    }));
 
-    // Inventario disponible por producto (incluye traspasos)
-    const inventario = await Promise.all(
-      products.map(async (product) => {
-        const [entregado, vendido, transferOut, transferIn] = await Promise.all([
-          this.prisma.delivery.aggregate({
-            where: { tenantId, partnerId, productId: product.id },
-            _sum: { quantity: true },
-          }),
-          this.prisma.sale.aggregate({
-            where: { tenantId, partnerId, productId: product.id, status: { in: ['CONFIRMED', 'PENDING'] } },
-            _sum: { quantity: true },
-          }),
-          this.prisma.transfer.aggregate({
-            where: { tenantId, fromPartnerId: partnerId, productId: product.id },
-            _sum: { quantity: true },
-          }),
-          this.prisma.transfer.aggregate({
-            where: { tenantId, toPartnerId: partnerId, productId: product.id },
-            _sum: { quantity: true },
-          }),
-        ]);
-        return {
-          product: { id: product.id, name: product.name },
-          disponible:
-            (entregado._sum.quantity || 0) -
-            (vendido._sum.quantity || 0) -
-            (transferOut._sum.quantity || 0) +
-            (transferIn._sum.quantity || 0),
-        };
-      }),
-    );
-
-    // Ventas confirmadas (para comisión e ingresos)
-    const ventasConfirmadas = await this.prisma.sale.findMany({
-      where: { tenantId, partnerId, status: 'CONFIRMED' },
-      include: { product: { select: { partnerPrice: true, salePrice: true } } },
-    });
-
-    // Últimas 5 ventas (cualquier estado)
-    const ultimasVentas = await this.prisma.sale.findMany({
-      where: { tenantId, partnerId },
-      include: { product: { select: { name: true } } },
-      orderBy: { date: 'desc' },
-      take: 5,
-    });
-
-    // Conteos
-    const ventasPendientesCount = await this.prisma.sale.count({
-      where: { tenantId, partnerId, status: 'PENDING' },
-    });
-    const totalEntregado = await this.prisma.delivery.aggregate({
-      where: { tenantId, partnerId },
-      _sum: { quantity: true },
-    });
-    const totalEntregadoQty = totalEntregado._sum.quantity || 0;
+    // Lo devuelto a bodega no cuenta como entregado para el rendimiento
+    const totalEntregadoQty = (totalEntregado._sum.quantity || 0) - (devueltoSocio._sum.quantity || 0);
     const totalVendidoQty = ventasConfirmadas.reduce((acc, s) => acc + s.quantity, 0);
     const rendimientoPct = totalEntregadoQty > 0
       ? Math.round((totalVendidoQty / totalEntregadoQty) * 100)
       : 0;
 
-    // Ingresos por tipo de cliente
-    const ingresoConsumidor = ventasConfirmadas
-      .filter(s => !this.esNegocio(s))
-      .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0);
-    const ingresoNegocio = ventasConfirmadas
-      .filter(s => this.esNegocio(s))
-      .reduce((acc, s) => acc + this.getPrecioVenta(s) * s.quantity, 0);
-
-    // Comisión
-    const comisionGenerada = ventasConfirmadas.reduce((acc, sale) => {
+    // Comisión (lo que gana el socio). No se exponen ingresos del negocio al socio.
+    const comisionDe = (sale: (typeof ventasConfirmadas)[number]) => {
       const precioSocio = sale.partnerPriceSnapshot ?? sale.product.partnerPrice;
       const margenSocio = (this.getPrecioVenta(sale) - precioSocio) * sale.quantity;
-      return acc + margenSocio * (partner!.commissionPct / 100);
-    }, 0);
+      return margenSocio * (partner!.commissionPct / 100);
+    };
+    const comisionConsumidor = ventasConfirmadas
+      .filter(s => !this.esNegocio(s))
+      .reduce((acc, s) => acc + comisionDe(s), 0);
+    const comisionNegocio = ventasConfirmadas
+      .filter(s => this.esNegocio(s))
+      .reduce((acc, s) => acc + comisionDe(s), 0);
+    const comisionGenerada = comisionConsumidor + comisionNegocio;
 
     const pagado = await this.prisma.commissionPayment.aggregate({
       where: { tenantId, partnerId },
@@ -266,10 +182,9 @@ export class DashboardService {
         ventasConfirmadas: ventasConfirmadas.length,
         totalUnidadesVendidas: totalVendidoQty,
         rendimientoPct,
-        // Ingresos
-        totalIngresos: Math.round(ingresoConsumidor + ingresoNegocio),
-        ingresoConsumidor: Math.round(ingresoConsumidor),
-        ingresoNegocio: Math.round(ingresoNegocio),
+        // Ganancias del socio por tipo de cliente
+        comisionConsumidor: Math.round(comisionConsumidor),
+        comisionNegocio: Math.round(comisionNegocio),
         ventasConsumidor: ventasConfirmadas.filter(s => !this.esNegocio(s)).length,
         ventasNegocio: ventasConfirmadas.filter(s => this.esNegocio(s)).length,
         // Inventario y últimas ventas

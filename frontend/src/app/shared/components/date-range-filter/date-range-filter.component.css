@@ -1,0 +1,17 @@
+.rango {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fecha {
+  width: 160px;
+}
+
+.atajos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}

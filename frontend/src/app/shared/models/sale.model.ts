@@ -1,5 +1,5 @@
 export type SaleStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED';
-export type ClientType = 'CONSUMER' | 'BUSINESS';
+export type ClientType = 'CONSUMER' | 'BUSINESS' | 'BUSINESS_2' | 'BUSINESS_3';
 
 export interface Sale {
   id: string;
@@ -15,5 +15,7 @@ export interface Sale {
   clientType: ClientType;
   salePriceSnapshot?: number;
   businessPriceSnapshot?: number;
+  businessPrice2Snapshot?: number;
+  businessPrice3Snapshot?: number;
   createdAt: string;
 }

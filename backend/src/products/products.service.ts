@@ -73,6 +73,8 @@ export class ProductsService {
     if (!existing) throw new NotFoundException('Producto no encontrado');
 
     const tieneRegistros =
+      (await this.prisma.purchase.count({ where: { productId: id } })) > 0 ||
+      (await this.prisma.stockReturn.count({ where: { productId: id } })) > 0 ||
       (await this.prisma.delivery.count({ where: { productId: id } })) > 0 ||
       (await this.prisma.sale.count({ where: { productId: id } })) > 0;
 

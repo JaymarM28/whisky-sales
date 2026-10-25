@@ -5,19 +5,39 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { InventoryService } from '../inventory/inventory.service';
+import { ListFilterDto, rangoFechas } from '../common/dto/list-filter.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleStatusDto } from './dto/update-sale-status.dto';
+
+/** Quita de una venta los datos de costo del negocio, que el socio no debe ver. */
+function ocultarCostos<T extends { costPriceSnapshot?: number | null; product?: object }>(sale: T) {
+  const { costPriceSnapshot: _, ...resto } = sale;
+  if (resto.product && 'costPrice' in resto.product) {
+    const { costPrice: __, ...product } = resto.product as { costPrice?: number };
+    return { ...resto, product };
+  }
+  return resto;
+}
 
 @Injectable()
 export class SalesService {
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
+    private inventory: InventoryService,
   ) {}
 
-  async findAll(userId: string, role: string, tenantId: string, page = 1, limit = 20) {
+  async findAll(userId: string, role: string, tenantId: string, filtros: ListFilterDto = {}) {
+    const { partnerId, productId, desde, hasta, page = 1, limit = 20 } = filtros;
     const skip = (page - 1) * limit;
-    const where = role === 'PARTNER' ? { partnerId: userId, tenantId } : { tenantId };
+    const where = {
+      tenantId,
+      // El socio siempre ve solo las suyas; el dueño puede filtrar por socio
+      ...(role === 'PARTNER' ? { partnerId: userId } : partnerId && { partnerId }),
+      ...(productId && { productId }),
+      ...rangoFechas(desde, hasta),
+    };
     const include = {
       partner: { select: { id: true, name: true } },
       product: { select: { id: true, name: true, reference: true, salePrice: true, costPrice: true } },
@@ -26,37 +46,15 @@ export class SalesService {
       this.prisma.sale.findMany({ where, include, orderBy: { createdAt: 'desc' }, skip, take: limit }),
       this.prisma.sale.count({ where }),
     ]);
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit), error: null, message: null };
+    const visibles = role === 'PARTNER' ? data.map(ocultarCostos) : data;
+    return { data: visibles, total, page, limit, totalPages: Math.ceil(total / limit), error: null, message: null };
   }
 
   async create(dto: CreateSaleDto, partnerId: string, tenantId: string, receiptImage?: string) {
     const product = await this.prisma.product.findFirst({ where: { id: dto.productId, tenantId } });
     if (!product) throw new NotFoundException('Producto no encontrado');
 
-    const [entregado, vendido, transferOut, transferIn] = await Promise.all([
-      this.prisma.delivery.aggregate({
-        where: { partnerId, productId: dto.productId, tenantId },
-        _sum: { quantity: true },
-      }),
-      this.prisma.sale.aggregate({
-        where: { partnerId, productId: dto.productId, tenantId, status: { in: ['CONFIRMED', 'PENDING'] } },
-        _sum: { quantity: true },
-      }),
-      this.prisma.transfer.aggregate({
-        where: { fromPartnerId: partnerId, productId: dto.productId, tenantId },
-        _sum: { quantity: true },
-      }),
-      this.prisma.transfer.aggregate({
-        where: { toPartnerId: partnerId, productId: dto.productId, tenantId },
-        _sum: { quantity: true },
-      }),
-    ]);
-
-    const disponible =
-      (entregado._sum.quantity || 0) -
-      (vendido._sum.quantity || 0) -
-      (transferOut._sum.quantity || 0) +
-      (transferIn._sum.quantity || 0);
+    const disponible = await this.inventory.getDisponible(partnerId, dto.productId, tenantId);
 
     if (dto.quantity > disponible) {
       throw new BadRequestException(
@@ -105,12 +103,22 @@ export class SalesService {
       });
     }
 
-    return { data: sale, error: null, message: 'Venta reportada exitosamente' };
+    return { data: ocultarCostos(sale), error: null, message: 'Venta reportada exitosamente' };
   }
 
   async updateStatus(id: string, dto: UpdateSaleStatusDto, tenantId: string) {
     const existing = await this.prisma.sale.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('Venta no encontrada');
+
+    // PENDING → CONFIRMED | REJECTED; CONFIRMED → REJECTED (anular). Una rechazada no se reabre.
+    const permitidas: Record<string, string[]> = {
+      PENDING: ['CONFIRMED', 'REJECTED'],
+      CONFIRMED: ['REJECTED'],
+      REJECTED: [],
+    };
+    if (!permitidas[existing.status].includes(dto.status)) {
+      throw new BadRequestException(`No se puede cambiar una venta ${existing.status} a ${dto.status}`);
+    }
 
     const sale = await this.prisma.sale.update({
       where: { id },
@@ -127,6 +135,9 @@ export class SalesService {
   async remove(id: string, tenantId: string) {
     const existing = await this.prisma.sale.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('Venta no encontrada');
+    if (existing.status === 'CONFIRMED') {
+      throw new BadRequestException('No se puede eliminar una venta confirmada: afecta comisiones ya calculadas. Anúlala en su lugar.');
+    }
 
     await this.prisma.sale.delete({ where: { id } });
     return { data: null, error: null, message: 'Venta eliminada exitosamente' };

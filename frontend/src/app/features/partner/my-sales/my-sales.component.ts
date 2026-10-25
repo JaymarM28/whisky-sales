@@ -3,6 +3,7 @@ import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SaleService } from '../../../core/services/sale.service';
+import { precioVentaUnitario } from '../../../shared/utils/sale-price';
 import { Sale } from '../../../shared/models/sale.model';
 import { ReportSaleDialogComponent } from './report-sale-dialog/report-sale-dialog.component';
 
@@ -17,7 +18,7 @@ export class MySalesComponent implements OnInit {
   totalItems = 0;
   pageSize = 20;
   currentPage = 1;
-  columnas = ['fecha', 'producto', 'cantidad', 'cliente', 'estado', 'notas'];
+  columnas = ['fecha', 'producto', 'cantidad', 'cliente', 'valor', 'estado', 'notas'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
@@ -60,6 +61,10 @@ export class MySalesComponent implements OnInit {
     dialogRef.afterClosed().subscribe((resultado) => {
       if (resultado) this.cargarVentas();
     });
+  }
+
+  getPrecioUnitario(sale: Sale): number {
+    return precioVentaUnitario(sale);
   }
 
   getLabelCliente(clientType: string): string {

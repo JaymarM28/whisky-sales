@@ -44,6 +44,9 @@ import { TenantDetailDialogComponent } from './admin/tenant-detail-dialog/tenant
 import { ReportsComponent } from './reports/reports.component';
 import { TransfersComponent } from './transfers/transfers.component';
 import { TransferFormDialogComponent } from './transfers/transfer-form-dialog/transfer-form-dialog.component';
+import { PurchasesComponent } from './purchases/purchases.component';
+import { ReturnFormDialogComponent } from './deliveries/return-form-dialog/return-form-dialog.component';
+import { PurchaseFormDialogComponent } from './purchases/purchase-form-dialog/purchase-form-dialog.component';
 
 @NgModule({
   declarations: [
@@ -67,6 +70,9 @@ import { TransferFormDialogComponent } from './transfers/transfer-form-dialog/tr
     ReportsComponent,
     TransfersComponent,
     TransferFormDialogComponent,
+    PurchasesComponent,
+    PurchaseFormDialogComponent,
+    ReturnFormDialogComponent,
   ],
   imports: [
     CommonModule,

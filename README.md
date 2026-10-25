@@ -32,7 +32,7 @@ Editar `backend/.env` con tus credenciales de PostgreSQL.
 ```bash
 cd backend
 npm install
-npx prisma migrate dev --name init
+npx prisma migrate deploy   # crea las tablas desde prisma/migrations
 npm run db:seed
 npm run start:dev
 ```
@@ -79,13 +79,10 @@ whisky-app/
 1. Crear proyecto en [Railway](https://railway.app)
 2. Agregar servicio PostgreSQL
 3. Agregar servicio desde el directorio `backend/`
-4. Configurar variables de entorno:
-   - `DATABASE_URL` (Railway la provee automáticamente al vincular PostgreSQL)
-   - `JWT_SECRET`
-   - `JWT_EXPIRES_IN=7d`
-   - `NODE_ENV=production`
+4. Configurar las variables de entorno listadas en `.env.example` (`JWT_SECRET` es obligatoria: sin ella el backend no arranca)
 5. Build command: `npm run build`
-6. Start command: `node dist/main`
+6. Start command: `node dist/src/main` (ya definido en `railway.toml`)
+7. Antes de desplegar un cambio de schema, aplicar las migraciones (ver abajo)
 
 ### Frontend
 
@@ -96,11 +93,29 @@ whisky-app/
 
 ---
 
+## Base de datos y migraciones
+
+El schema se versiona con migraciones de Prisma en `backend/prisma/migrations/`. No usar `prisma db push`:
+cambia la base sin dejar registro y la historia de migraciones deja de coincidir con la base real.
+
+```bash
+# 1. Cambiar prisma/schema.prisma y crear la migración (contra una base local o de desarrollo)
+cd backend && npm run db:migrate -- --name descripcion_del_cambio
+
+# 2. Revisar el SQL generado en prisma/migrations/<fecha>_descripcion_del_cambio/ y hacer commit
+
+# 3. Antes de desplegar, aplicarla en producción (con DATABASE_URL apuntando a producción)
+cd backend && npm run db:migrate:deploy
+```
+
+`0_baseline` representa el schema completo a octubre de 2026. Una base creada antes con `db push` se
+marca como al día una sola vez con `npx prisma migrate resolve --applied 0_baseline` (no ejecuta SQL).
+
 ## Comandos útiles
 
 ```bash
-# Ejecutar migraciones
-cd backend && npx prisma migrate dev
+# Ver el estado de las migraciones
+cd backend && npx prisma migrate status
 
 # Abrir Prisma Studio
 cd backend && npx prisma studio

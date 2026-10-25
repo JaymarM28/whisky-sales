@@ -23,6 +23,14 @@ export class UserService {
     return this.http.get<ApiResponse<User[]>>(`${this.apiUrl}/owners`);
   }
 
+  getMe(): Observable<ApiResponse<User>> {
+    return this.http.get<ApiResponse<User>>(`${environment.apiUrl}/auth/me`);
+  }
+
+  updateMyEmail(email: string): Observable<ApiResponse<User>> {
+    return this.http.patch<ApiResponse<User>>(`${this.apiUrl}/me/email`, { email });
+  }
+
   updateMyPin(pin: string): Observable<ApiResponse<User>> {
     return this.http.patch<ApiResponse<User>>(`${this.apiUrl}/me/pin`, { pin });
   }

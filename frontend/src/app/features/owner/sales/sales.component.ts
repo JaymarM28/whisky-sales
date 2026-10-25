@@ -4,6 +4,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SaleService } from '../../../core/services/sale.service';
 import { Sale } from '../../../shared/models/sale.model';
+import { User } from '../../../shared/models/user.model';
+import { UserService } from '../../../core/services/user.service';
+import { precioVentaUnitario } from '../../../shared/utils/sale-price';
+import { RangoFechas } from '../../../shared/components/date-range-filter/date-range-filter.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ReceiptDialogComponent } from './receipt-dialog/receipt-dialog.component';
 
@@ -19,16 +23,31 @@ export class SalesComponent implements OnInit {
   totalItems = 0;
   pageSize = 20;
   currentPage = 1;
-  columnas = ['fecha', 'socio', 'producto', 'cantidad', 'cliente', 'estado', 'comprobante', 'acciones'];
+  columnas = ['fecha', 'socio', 'producto', 'cantidad', 'cliente', 'valor', 'estado', 'comprobante', 'acciones'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  socios: User[] = [];
+  filtroSocio = '';
+  rango: RangoFechas = {};
 
   constructor(
     private saleService: SaleService,
+    private userService: UserService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
+    this.userService.getAll().subscribe((res) => (this.socios = res.data.filter((u) => u.role === 'PARTNER')));
+    this.cargarVentas();
+  }
+
+  onRangoChange(rango: RangoFechas): void {
+    this.rango = rango;
+    this.filtrar();
+  }
+
+  filtrar(): void {
+    this.currentPage = 1;
     this.cargarVentas();
   }
 
@@ -40,7 +59,7 @@ export class SalesComponent implements OnInit {
 
   cargarVentas(): void {
     this.cargando = true;
-    this.saleService.getAll(this.currentPage, this.pageSize).subscribe({
+    this.saleService.getAll(this.currentPage, this.pageSize, { partnerId: this.filtroSocio, ...this.rango }).subscribe({
       next: (res) => {
         this.ventas = res.data;
         this.totalItems = res.total ?? 0;
@@ -50,6 +69,18 @@ export class SalesComponent implements OnInit {
         this.snackBar.open('Error al cargar ventas', 'Cerrar', { duration: 3000 });
         this.cargando = false;
       },
+    });
+  }
+
+  confirmarAnular(venta: Sale): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        titulo: 'Anular venta confirmada',
+        mensaje: `La venta pasará a "Rechazada": se descuenta de la comisión de ${venta.partner?.name} y las unidades vuelven a su inventario.`,
+      },
+    });
+    dialogRef.afterClosed().subscribe((confirmado) => {
+      if (confirmado) this.cambiarEstado(venta, 'REJECTED');
     });
   }
 
@@ -65,9 +96,9 @@ export class SalesComponent implements OnInit {
         );
         this.cargarVentas();
       },
-      error: () => {
+      error: (err) => {
         this.procesando.delete(venta.id);
-        this.snackBar.open('Error al actualizar estado', 'Cerrar', { duration: 3000 });
+        this.snackBar.open(err.error?.error || 'Error al actualizar estado', 'Cerrar', { duration: 4000 });
       },
     });
   }
@@ -92,12 +123,16 @@ export class SalesComponent implements OnInit {
             this.snackBar.open('Venta eliminada', 'Cerrar', { duration: 3000 });
             this.cargarVentas();
           },
-          error: () => {
-            this.snackBar.open('Error al eliminar venta', 'Cerrar', { duration: 3000 });
+          error: (err) => {
+            this.snackBar.open(err.error?.error || 'Error al eliminar venta', 'Cerrar', { duration: 5000 });
           },
         });
       }
     });
+  }
+
+  getPrecioUnitario(sale: Sale): number {
+    return precioVentaUnitario(sale);
   }
 
   getLabelCliente(clientType: string): string {

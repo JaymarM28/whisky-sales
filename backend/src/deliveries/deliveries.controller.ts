@@ -9,10 +9,10 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DeliveriesService } from './deliveries.service';
 import { CreateDeliveryDto } from './dto/create-delivery.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { ListFilterDto } from '../common/dto/list-filter.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -25,17 +25,10 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class DeliveriesController {
   constructor(private deliveriesService: DeliveriesService) {}
 
-  @ApiOperation({ summary: 'Listar entregas (filtros opcionales por socio y producto)' })
-  @ApiQuery({ name: 'partnerId', required: false })
-  @ApiQuery({ name: 'productId', required: false })
+  @ApiOperation({ summary: 'Listar entregas (filtros opcionales por socio, producto y fechas)' })
   @Get()
-  findAll(
-    @Request() req,
-    @Query('partnerId') partnerId?: string,
-    @Query('productId') productId?: string,
-    @Query() pagination?: PaginationDto,
-  ) {
-    return this.deliveriesService.findAll(req.user.tenantId, partnerId, productId, pagination?.page, pagination?.limit);
+  findAll(@Request() req, @Query() filtros: ListFilterDto) {
+    return this.deliveriesService.findAll(req.user.tenantId, filtros);
   }
 
   @ApiOperation({ summary: 'Registrar entrega a un socio' })

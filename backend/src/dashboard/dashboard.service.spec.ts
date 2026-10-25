@@ -1,149 +1,92 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardService } from './dashboard.service';
-import { PrismaService } from '../prisma/prisma.service';
-
-const mockPrisma = {
-  sale: { count: jest.fn(), findMany: jest.fn(), aggregate: jest.fn() },
-  user: { findMany: jest.fn(), findUnique: jest.fn() },
-  product: { findMany: jest.fn() },
-  delivery: { aggregate: jest.fn() },
-  commissionPayment: { aggregate: jest.fn() },
-};
+import { InventoryService } from '../inventory/inventory.service';
+import { crearFakePrisma } from '../../test/fake-prisma';
+import { escenario, T } from '../../test/escenario';
 
 describe('DashboardService', () => {
   let service: DashboardService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        DashboardService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
-    }).compile();
-
-    service = module.get<DashboardService>(DashboardService);
-    jest.clearAllMocks();
+  beforeEach(() => {
+    const prisma = crearFakePrisma(escenario());
+    service = new DashboardService(prisma, new InventoryService(prisma));
   });
-
-  // ── getOwnerDashboard ─────────────────────────────────────────────────────────
 
   describe('getOwnerDashboard', () => {
-    it('calcula gananciaBruta correctamente', async () => {
-      mockPrisma.sale.count.mockResolvedValue(3);
-      // 2 ventas confirmadas: (100k-60k)*5 = 200k | (80k-50k)*2 = 60k → bruta = 260k
-      mockPrisma.sale.findMany.mockResolvedValue([
-        { quantity: 5, product: { costPrice: 60000, salePrice: 100000 } },
-        { quantity: 2, product: { costPrice: 50000, salePrice: 80000 } },
-      ]);
-      mockPrisma.user.findMany.mockResolvedValue([]);
-      mockPrisma.delivery.aggregate.mockResolvedValue({ _sum: { quantity: 20 } });
-      mockPrisma.sale.aggregate.mockResolvedValue({ _sum: { quantity: 7 } });
-
-      const result = await service.getOwnerDashboard();
-      expect(result.data.gananciaBruta).toBe(260000);
+    it('calcula ventas, ganancias y comisiones del negocio', async () => {
+      const { data } = await service.getOwnerDashboard(T);
+      expect(data).toMatchObject({
+        ventasPendientes: 1,
+        ventasConfirmadas: 4,
+        gananciaBruta: 660_000,
+        comisionesGeneradas: 106_000,
+        comisionesPagadas: 50_000,
+        comisionesPendientes: 56_000,
+        gananciaNeta: 610_000,
+      });
     });
 
-    it('calcula gananciaNeta = gananciaBruta - comisiones pagadas', async () => {
-      mockPrisma.sale.count.mockResolvedValue(0);
-      // bruta = (100k-60k)*10 = 400k
-      mockPrisma.sale.findMany.mockResolvedValue([
-        { quantity: 10, product: { costPrice: 60000, salePrice: 100000 } },
-      ]);
-      // 1 socio, 20% comisión → generada = 80k, pagada = 50k
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'p1', name: 'Leo', commissionPct: 20 }]);
-
-      // Para el socio: findMany de ventas (mismo mock)
-      mockPrisma.sale.findMany
-        .mockResolvedValueOnce([{ quantity: 10, product: { costPrice: 60000, salePrice: 100000 } }]) // owner global
-        .mockResolvedValueOnce([{ quantity: 10, product: { costPrice: 60000, salePrice: 100000 } }]); // socio
-
-      mockPrisma.commissionPayment.aggregate.mockResolvedValue({ _sum: { amount: 50000 } });
-      mockPrisma.delivery.aggregate.mockResolvedValue({ _sum: { quantity: 10 } });
-      mockPrisma.sale.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
-
-      const result = await service.getOwnerDashboard();
-      // gananciaBruta = 400k, comisiones pagadas = 50k → neta = 350k
-      expect(result.data.gananciaNeta).toBe(result.data.gananciaBruta - 50000);
+    it('separa ingresos por consumidor y negocio (incluye Negocio 2)', async () => {
+      const { data } = await service.getOwnerDashboard(T);
+      expect(data.ventasPorTipo).toEqual({
+        consumidor: { count: 2, ingresos: 180_000 * 3 + 90_000 * 2 },
+        negocio: { count: 2, ingresos: 150_000 * 2 + 160_000 * 4 },
+      });
     });
 
-    it('calcula comisionesPendientes = generadas - pagadas', async () => {
-      mockPrisma.sale.count.mockResolvedValue(2);
-      mockPrisma.sale.findMany
-        .mockResolvedValueOnce([]) // ventas globales (gananciaBruta = 0)
-        .mockResolvedValueOnce([
-          { quantity: 5, product: { costPrice: 60000, salePrice: 100000 } },
-        ]); // ventas del socio
-
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'p1', name: 'Leo', commissionPct: 20 }]);
-      // generada = (100k-60k)*5 * 20% = 40k, pagada = 15k → pendiente = 25k
-      mockPrisma.commissionPayment.aggregate.mockResolvedValue({ _sum: { amount: 15000 } });
-      mockPrisma.delivery.aggregate.mockResolvedValue({ _sum: { quantity: 5 } });
-      mockPrisma.sale.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
-
-      const result = await service.getOwnerDashboard();
-      expect(result.data.comisionesPendientes).toBe(25000);
+    it('resume inventario global con compras y devoluciones', async () => {
+      const { data } = await service.getOwnerDashboard(T);
+      expect(data.inventarioGlobal).toEqual({
+        totalComprado: 34,
+        totalInvertido: 2_900_000,
+        enBodega: 12,
+        totalEntregado: 23,
+        totalVendido: 11,
+        totalDevuelto: 1,
+        disponible: 11,
+      });
     });
 
-    it('retorna ventasPendientes', async () => {
-      mockPrisma.sale.count.mockResolvedValue(7);
-      mockPrisma.sale.findMany.mockResolvedValue([]);
-      mockPrisma.user.findMany.mockResolvedValue([]);
-      mockPrisma.delivery.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
-      mockPrisma.sale.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
-
-      const result = await service.getOwnerDashboard();
-      expect(result.data.ventasPendientes).toBe(7);
+    it('lista el inventario por socio y producto', async () => {
+      const { data } = await service.getOwnerDashboard(T);
+      const filas = data.inventarioPorSocio.map((i: any) => [i.socio, i.producto, i.entregado, i.vendido, i.disponible]);
+      expect(filas).toEqual(
+        expect.arrayContaining([
+          ['Ana', 'Whisky A', 12, 6, 3],
+          ['Ana', 'Whisky B', 5, 2, 3],
+          ['Beto', 'Whisky A', 6, 4, 4],
+        ]),
+      );
+      expect(filas).toHaveLength(3);
     });
   });
 
-  // ── getPartnerDashboard ───────────────────────────────────────────────────────
-
   describe('getPartnerDashboard', () => {
-    const partnerId = 'partner-1';
-
-    it('calcula inventario disponible excluyendo CONFIRMED+PENDING', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ commissionPct: 20, name: 'Leo' });
-      mockPrisma.product.findMany.mockResolvedValue([
-        { id: 'prod-1', name: 'Whisky A' },
-      ]);
-      // 10 entregados, 4 usados (CONFIRMED+PENDING) → 6 disponibles
-      mockPrisma.delivery.aggregate.mockResolvedValue({ _sum: { quantity: 10 } });
-      mockPrisma.sale.aggregate.mockResolvedValue({ _sum: { quantity: 4 } });
-      mockPrisma.sale.findMany.mockResolvedValue([]);
-      mockPrisma.commissionPayment.aggregate.mockResolvedValue({ _sum: { amount: 0 } });
-
-      const result = await service.getPartnerDashboard(partnerId);
-      expect(result.data.inventario[0].disponible).toBe(6);
+    it('muestra al socio su inventario y sus ganancias', async () => {
+      const { data } = await service.getPartnerDashboard('p1', T);
+      expect(data.inventario.map((i: any) => [i.product.id, i.disponible])).toEqual([['A', 3], ['B', 3]]);
+      expect(data).toMatchObject({
+        comisionGenerada: 90_000,
+        comisionPagada: 50_000,
+        comisionPendiente: 40_000,
+        comisionConsumidor: 80_000,
+        comisionNegocio: 10_000,
+        ventasPendientes: 1,
+        ventasConfirmadas: 3,
+        totalUnidadesVendidas: 7,
+        rendimientoPct: 44, // 7 vendidas / (17 entregadas − 1 devuelta)
+      });
     });
 
-    it('filtra inventario con disponible = 0', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ commissionPct: 20, name: 'Leo' });
-      mockPrisma.product.findMany.mockResolvedValue([{ id: 'prod-1', name: 'Whisky A' }]);
-      mockPrisma.delivery.aggregate.mockResolvedValue({ _sum: { quantity: 5 } });
-      mockPrisma.sale.aggregate.mockResolvedValue({ _sum: { quantity: 5 } }); // todo agotado
-      mockPrisma.sale.findMany.mockResolvedValue([]);
-      mockPrisma.commissionPayment.aggregate.mockResolvedValue({ _sum: { amount: 0 } });
-
-      const result = await service.getPartnerDashboard(partnerId);
-      expect(result.data.inventario).toHaveLength(0);
+    it('no expone ingresos del negocio al socio', async () => {
+      const { data } = await service.getPartnerDashboard('p1', T);
+      expect(data).not.toHaveProperty('totalIngresos');
+      expect(data).not.toHaveProperty('ingresoConsumidor');
+      expect(data).not.toHaveProperty('ingresoNegocio');
     });
 
-    it('calcula comisionPendiente correctamente', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ commissionPct: 25, name: 'Leo' });
-      mockPrisma.product.findMany.mockResolvedValue([]);
-      // ventas confirmadas: ganancia bruta = (80k-50k)*4 = 120k, comisión = 30k
-      mockPrisma.sale.findMany.mockResolvedValue([
-        { quantity: 4, product: { costPrice: 50000, salePrice: 80000 } },
-      ]);
-      mockPrisma.delivery.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
-      mockPrisma.sale.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
-      // pagado: 10k → pendiente = 20k
-      mockPrisma.commissionPayment.aggregate.mockResolvedValue({ _sum: { amount: 10000 } });
-
-      const result = await service.getPartnerDashboard(partnerId);
-      expect(result.data.comisionGenerada).toBe(30000);
-      expect(result.data.comisionPagada).toBe(10000);
-      expect(result.data.comisionPendiente).toBe(20000);
+    it('lista las últimas ventas del socio, la más reciente primero', async () => {
+      const { data } = await service.getPartnerDashboard('p1', T);
+      expect(data.ultimasVentas.map((v: any) => v.id)).toEqual(['s6', 's4', 's3', 's2', 's1']);
     });
   });
 });

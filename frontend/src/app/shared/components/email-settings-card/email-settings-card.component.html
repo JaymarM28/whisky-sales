@@ -1,0 +1,37 @@
+<mat-card class="settings-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>email</mat-icon>
+      Email de recuperación
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="ayuda">
+      <ng-container *ngIf="emailActual; else sinEmail">
+        Si olvidas tu PIN, te enviaremos el enlace a <strong>{{ emailActual }}</strong>.
+      </ng-container>
+      <ng-template #sinEmail>
+        No tienes email registrado. Agrégalo para poder recuperar tu PIN si lo olvidas.
+      </ng-template>
+    </p>
+
+    <form [formGroup]="form" class="settings-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email" inputmode="email" autocomplete="email" />
+        <mat-error *ngIf="form.get('email')?.hasError('required')">El email es obligatorio</mat-error>
+        <mat-error *ngIf="form.get('email')?.hasError('email')">Correo inválido</mat-error>
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="guardar()"
+        [disabled]="form.invalid || guardando"
+      >
+        <mat-icon>save</mat-icon>
+        {{ guardando ? 'Guardando...' : 'Guardar email' }}
+      </button>
+    </form>
+  </mat-card-content>
+</mat-card>

@@ -9,7 +9,7 @@
 
   <mat-card>
     <mat-card-content>
-      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="6"></app-skeleton-table>
+      <app-skeleton-table *ngIf="cargando" [rows]="6" [columns]="7"></app-skeleton-table>
 
       <div *ngIf="!cargando" class="table-container">
         <table mat-table [dataSource]="ventas">
@@ -34,6 +34,14 @@
               <mat-chip [class]="row.clientType === 'CONSUMER' ? 'chip-consumidor' : 'chip-negocio'">
                 {{ getLabelCliente(row.clientType) }}
               </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="valor">
+            <th mat-header-cell *matHeaderCellDef>Valor</th>
+            <td mat-cell *matCellDef="let row">
+              <strong>{{ getPrecioUnitario(row) * row.quantity | copCurrency }}</strong>
+              <div *ngIf="row.quantity > 1" class="valor-unitario">{{ getPrecioUnitario(row) | copCurrency }} c/u</div>
             </td>
           </ng-container>
 

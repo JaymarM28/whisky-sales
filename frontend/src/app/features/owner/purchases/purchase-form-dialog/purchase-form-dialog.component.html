@@ -1,0 +1,72 @@
+<h2 mat-dialog-title>
+  <mat-icon>shopping_cart</mat-icon>
+  Registrar compra
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Producto</mat-label>
+      <mat-select formControlName="productId" (selectionChange)="onProductoChange()">
+        <mat-option *ngFor="let p of data.productos" [value]="p.id">
+          {{ p.name }}
+        </mat-option>
+      </mat-select>
+      <mat-error>Selecciona un producto</mat-error>
+    </mat-form-field>
+
+    <div class="row">
+      <mat-form-field appearance="outline" class="modo">
+        <mat-label>Comprar por</mat-label>
+        <mat-select formControlName="modo">
+          <mat-option value="unidades">Unidades</mat-option>
+          <mat-option value="cajas" [disabled]="!permiteCajas">
+            Cajas{{ permiteCajas ? ' (' + productoSeleccionado?.unitsPerBox + ' u.)' : '' }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cantidad">
+        <mat-label>Cantidad</mat-label>
+        <input matInput type="number" formControlName="cantidad" min="1" />
+        <mat-hint *ngIf="form.value.modo === 'cajas'">{{ unidades }} botellas</mat-hint>
+        <mat-error>Debe ser mayor a 0</mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Total pagado (COP)</mat-label>
+      <input matInput type="number" formControlName="totalCost" min="1" />
+      <mat-hint *ngIf="costoUnitario > 0">Costo por botella: {{ costoUnitario | copCurrency }}</mat-hint>
+      <mat-error>Ingresa cuánto pagaste</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha</mat-label>
+      <input matInput type="date" formControlName="date" />
+      <mat-error>La fecha es obligatoria</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Proveedor (opcional)</mat-label>
+      <input matInput formControlName="supplier" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notas (opcional)</mat-label>
+      <textarea matInput formControlName="notes" rows="2"></textarea>
+    </mat-form-field>
+
+    <p class="aviso">
+      <mat-icon>info</mat-icon>
+      El costo del producto se actualizará al promedio ponderado de todas sus compras.
+    </p>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid || guardando">
+    {{ guardando ? 'Guardando...' : 'Registrar' }}
+  </button>
+</mat-dialog-actions>

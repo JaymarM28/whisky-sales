@@ -7,3 +7,7 @@ h2 {
 mat-form-field {
   margin-bottom: 8px;
 }
+
+.hint-error {
+  color: #dc2626;
+}

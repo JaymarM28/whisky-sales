@@ -11,6 +11,7 @@ import { SettingsComponent } from './settings/settings.component';
 import { AdminComponent } from './admin/admin.component';
 import { ReportsComponent } from './reports/reports.component';
 import { TransfersComponent } from './transfers/transfers.component';
+import { PurchasesComponent } from './purchases/purchases.component';
 
 const routes: Routes = [
   {
@@ -20,6 +21,7 @@ const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'partners', component: PartnersComponent },
       { path: 'products', component: ProductsComponent },
+      { path: 'purchases', component: PurchasesComponent },
       { path: 'deliveries', component: DeliveriesComponent },
       { path: 'transfers', component: TransfersComponent },
       { path: 'sales', component: SalesComponent },

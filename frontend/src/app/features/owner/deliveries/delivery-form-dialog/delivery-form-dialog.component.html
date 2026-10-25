@@ -28,6 +28,9 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Cantidad</mat-label>
       <input matInput type="number" formControlName="quantity" min="1" />
+      <mat-hint *ngIf="disponibleBodega !== null" [class.hint-error]="excedeBodega">
+        En bodega: {{ disponibleBodega }}{{ excedeBodega ? ' — registra una compra primero' : '' }}
+      </mat-hint>
       <mat-error>La cantidad debe ser mayor a 0</mat-error>
     </mat-form-field>
 
@@ -46,7 +49,7 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid || guardando">
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid || excedeBodega || guardando">
     {{ guardando ? 'Guardando...' : 'Registrar' }}
   </button>
 </mat-dialog-actions>

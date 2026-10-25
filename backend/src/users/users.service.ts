@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateMyEmailDto } from './dto/update-my-email.dto';
 
 const USER_SELECT = {
   id: true,
@@ -111,6 +112,19 @@ export class UsersService {
     return { data: user, error: null, message: 'PIN actualizado correctamente' };
   }
 
+  async updateMyEmail(id: string, dto: UpdateMyEmailDto) {
+    const email = dto.email.trim().toLowerCase();
+    const enUso = await this.prisma.user.findFirst({ where: { email, id: { not: id } } });
+    if (enUso) throw new ConflictException('Ese email ya está registrado por otro usuario');
+
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { email },
+      select: USER_SELECT,
+    });
+    return { data: user, error: null, message: 'Email actualizado correctamente' };
+  }
+
   async update(id: string, dto: UpdateUserDto, tenantId: string) {
     const existing = await this.prisma.user.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('Socio no encontrado');
@@ -144,21 +158,23 @@ export class UsersService {
     const existing = await this.prisma.user.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('Socio no encontrado');
 
-    const [entregas, ventas, traspasosOut, traspasosIn, comisiones] = await Promise.all([
+    const [entregas, ventas, traspasosOut, traspasosIn, comisiones, devoluciones] = await Promise.all([
       this.prisma.delivery.count({ where: { partnerId: id } }),
       this.prisma.sale.count({ where: { partnerId: id } }),
       this.prisma.transfer.count({ where: { fromPartnerId: id } }),
       this.prisma.transfer.count({ where: { toPartnerId: id } }),
       this.prisma.commissionPayment.count({ where: { partnerId: id } }),
+      this.prisma.stockReturn.count({ where: { partnerId: id } }),
     ]);
 
-    const total = entregas + ventas + traspasosOut + traspasosIn + comisiones;
+    const total = entregas + ventas + traspasosOut + traspasosIn + comisiones + devoluciones;
     if (total > 0) {
       const detalle = [
         entregas   > 0 ? `${entregas} entrega(s)`   : null,
         ventas     > 0 ? `${ventas} venta(s)`       : null,
         traspasosOut + traspasosIn > 0 ? `${traspasosOut + traspasosIn} traspaso(s)` : null,
         comisiones > 0 ? `${comisiones} pago(s) de comisión` : null,
+        devoluciones > 0 ? `${devoluciones} devolución(es)` : null,
       ].filter(Boolean).join(', ');
       throw new BadRequestException(
         `No se puede eliminar: el socio tiene ${detalle} registrados`,

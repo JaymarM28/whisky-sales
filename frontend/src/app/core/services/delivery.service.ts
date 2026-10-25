@@ -11,10 +11,13 @@ export class DeliveryService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(partnerId?: string, productId?: string, page = 1, limit = 20): Observable<ApiResponse<Delivery[]>> {
+  getAll(
+    filtros: { partnerId?: string; productId?: string; desde?: string; hasta?: string } = {},
+    page = 1,
+    limit = 20,
+  ): Observable<ApiResponse<Delivery[]>> {
     let params = new HttpParams().set('page', page).set('limit', limit);
-    if (partnerId) params = params.set('partnerId', partnerId);
-    if (productId) params = params.set('productId', productId);
+    for (const [k, v] of Object.entries(filtros)) if (v) params = params.set(k, v);
     return this.http.get<ApiResponse<Delivery[]>>(this.apiUrl, { params });
   }
 
