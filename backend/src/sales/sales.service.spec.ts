@@ -50,6 +50,14 @@ describe('SalesService', () => {
       expect(result.data.map((s: any) => s.id)).toEqual(['s5']);
     });
 
+    it('el dueño filtra por estado', async () => {
+      const pendientes = await service.findAll('owner', 'OWNER', T, { status: 'PENDING' });
+      expect(pendientes.data.map((s: any) => s.id)).toEqual(['s3']);
+
+      const confirmadasAna = await service.findAll('owner', 'OWNER', T, { status: 'CONFIRMED', partnerId: 'p1' });
+      expect(confirmadasAna.data.map((s: any) => s.id).sort()).toEqual(['s1', 's2', 's6']);
+    });
+
     it('el dueño filtra por socio y fechas', async () => {
       const result = await service.findAll('owner', 'OWNER', T, { partnerId: 'p1', desde: '2026-10-06', hasta: '2026-10-08' });
       expect(result.data.map((s: any) => s.id).sort()).toEqual(['s2', 's3', 's4']);

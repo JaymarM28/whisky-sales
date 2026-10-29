@@ -6,7 +6,8 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { InventoryService } from '../inventory/inventory.service';
-import { ListFilterDto, rangoFechas } from '../common/dto/list-filter.dto';
+import { rangoFechas } from '../common/dto/list-filter.dto';
+import { SaleFilterDto } from './dto/sale-filter.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleStatusDto } from './dto/update-sale-status.dto';
 
@@ -28,14 +29,15 @@ export class SalesService {
     private inventory: InventoryService,
   ) {}
 
-  async findAll(userId: string, role: string, tenantId: string, filtros: ListFilterDto = {}) {
-    const { partnerId, productId, desde, hasta, page = 1, limit = 20 } = filtros;
+  async findAll(userId: string, role: string, tenantId: string, filtros: SaleFilterDto = {}) {
+    const { partnerId, productId, status, desde, hasta, page = 1, limit = 20 } = filtros;
     const skip = (page - 1) * limit;
     const where = {
       tenantId,
       // El socio siempre ve solo las suyas; el dueño puede filtrar por socio
       ...(role === 'PARTNER' ? { partnerId: userId } : partnerId && { partnerId }),
       ...(productId && { productId }),
+      ...(status && { status }),
       ...rangoFechas(desde, hasta),
     };
     const include = {

@@ -11,7 +11,7 @@ export class SaleService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(page = 1, limit = 20, filtros: { partnerId?: string; desde?: string; hasta?: string } = {}): Observable<ApiResponse<Sale[]>> {
+  getAll(page = 1, limit = 20, filtros: { partnerId?: string; status?: string; desde?: string; hasta?: string } = {}): Observable<ApiResponse<Sale[]>> {
     let params = new HttpParams().set('page', page).set('limit', limit);
     for (const [k, v] of Object.entries(filtros)) if (v) params = params.set(k, v);
     return this.http.get<ApiResponse<Sale[]>>(this.apiUrl, { params });

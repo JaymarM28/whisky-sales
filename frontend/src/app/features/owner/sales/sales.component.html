@@ -16,6 +16,13 @@
             <mat-option *ngFor="let s of socios" [value]="s.id">{{ s.name }}</mat-option>
           </mat-select>
         </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filtroEstado" (selectionChange)="filtrar()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let e of estados" [value]="e.valor">{{ e.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
         <app-date-range-filter (rangoChange)="onRangoChange($event)"></app-date-range-filter>
       </div>
     </mat-card-content>

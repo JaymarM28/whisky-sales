@@ -13,7 +13,7 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
-import { ListFilterDto } from '../common/dto/list-filter.dto';
+import { SaleFilterDto } from './dto/sale-filter.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -50,7 +50,7 @@ export class SalesController {
 
   @ApiOperation({ summary: 'Listar ventas (OWNER: todas | PARTNER: las suyas)' })
   @Get()
-  findAll(@Request() req, @Query() filtros: ListFilterDto) {
+  findAll(@Request() req, @Query() filtros: SaleFilterDto) {
     return this.salesService.findAll(req.user.id, req.user.role, req.user.tenantId, filtros);
   }
 

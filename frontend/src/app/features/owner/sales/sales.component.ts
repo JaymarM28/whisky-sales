@@ -27,6 +27,12 @@ export class SalesComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   socios: User[] = [];
   filtroSocio = '';
+  filtroEstado = '';
+  estados = [
+    { valor: 'PENDING', label: 'Pendientes' },
+    { valor: 'CONFIRMED', label: 'Confirmadas' },
+    { valor: 'REJECTED', label: 'Rechazadas' },
+  ];
   rango: RangoFechas = {};
 
   constructor(
@@ -59,7 +65,7 @@ export class SalesComponent implements OnInit {
 
   cargarVentas(): void {
     this.cargando = true;
-    this.saleService.getAll(this.currentPage, this.pageSize, { partnerId: this.filtroSocio, ...this.rango }).subscribe({
+    this.saleService.getAll(this.currentPage, this.pageSize, { partnerId: this.filtroSocio, status: this.filtroEstado, ...this.rango }).subscribe({
       next: (res) => {
         this.ventas = res.data;
         this.totalItems = res.total ?? 0;
