@@ -26,3 +26,19 @@
   color: rgba(0, 0, 0, .55);
   margin: 16px 0 8px;
 }
+
+.resumen-perdidas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #7f1d1d;
+  font-size: 13px;
+}
+
+.text-muted {
+  color: rgba(0, 0, 0, .38);
+}

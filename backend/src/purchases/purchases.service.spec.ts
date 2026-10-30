@@ -8,6 +8,7 @@ const mockPrisma = {
   purchase: { create: jest.fn(), findFirst: jest.fn(), delete: jest.fn(), aggregate: jest.fn() },
   delivery: { aggregate: jest.fn() },
   stockReturn: { aggregate: jest.fn() },
+  stockLoss: { aggregate: jest.fn() },
 };
 
 describe('PurchasesService', () => {
@@ -22,6 +23,7 @@ describe('PurchasesService', () => {
     service = module.get<PurchasesService>(PurchasesService);
     jest.clearAllMocks();
     mockPrisma.stockReturn.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
+    mockPrisma.stockLoss.aggregate.mockResolvedValue({ _sum: { quantity: 0 } });
   });
 
   // ── create ───────────────────────────────────────────────────────────────────

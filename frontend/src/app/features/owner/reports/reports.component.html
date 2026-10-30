@@ -533,6 +533,10 @@
                   <span class="sk-val blue">{{ s.totales.traspasosIn }}</span>
                   <span class="sk-lbl">Traspasos entrada</span>
                 </div>
+                <div class="sk-item" *ngIf="s.totales.perdidas > 0">
+                  <span class="sk-val red">{{ s.totales.perdidas }}</span>
+                  <span class="sk-lbl">Pérdidas</span>
+                </div>
                 <div class="sk-item" *ngIf="s.totales.devoluciones > 0">
                   <span class="sk-val red">{{ s.totales.devoluciones }}</span>
                   <span class="sk-lbl">Devoluciones</span>

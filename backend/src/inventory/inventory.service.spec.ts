@@ -17,7 +17,7 @@ describe('InventoryService', () => {
 
   it('getMovimientos detalla cada concepto', async () => {
     await expect(service.getMovimientos('p1', 'A', T)).resolves.toEqual({
-      entregado: 12, vendido: 6, traspasoSalida: 2, traspasoEntrada: 0, devuelto: 1, disponible: 3,
+      entregado: 12, vendido: 6, traspasoSalida: 2, traspasoEntrada: 0, devuelto: 1, perdido: 0, disponible: 3,
     });
   });
 

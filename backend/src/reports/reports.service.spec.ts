@@ -37,7 +37,7 @@ describe('ReportsService', () => {
   it('getInventarioPorSocio: movimientos incluyen la devolución', async () => {
     const { data } = await service.getInventarioPorSocio(T);
     const ana = data.find((s: any) => s.socio.id === 'p1');
-    expect(ana.totales).toEqual({ entregas: 17, ventasConf: 7, ventasPend: 1, traspasosOut: 2, traspasosIn: 0, devoluciones: 1, disponible: 6 });
+    expect(ana.totales).toEqual({ entregas: 17, ventasConf: 7, ventasPend: 1, traspasosOut: 2, traspasosIn: 0, devoluciones: 1, perdidas: 0, disponible: 6 });
 
     const movA = ana.productos.find((p: any) => p.producto.id === 'A').movimientos.map((m: any) => m.tipo);
     expect(movA).toEqual(['ENTREGA', 'TRASPASO_SALIDA', 'DEVOLUCION', 'VENTA_CONF', 'VENTA_CONF', 'VENTA_PEND']);

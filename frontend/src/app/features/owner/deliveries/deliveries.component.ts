@@ -4,16 +4,19 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DeliveryService } from '../../../core/services/delivery.service';
 import { StockReturnService } from '../../../core/services/stock-return.service';
+import { StockLossService } from '../../../core/services/stock-loss.service';
 import { UserService } from '../../../core/services/user.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Delivery } from '../../../shared/models/delivery.model';
 import { StockReturn } from '../../../shared/models/stock-return.model';
+import { ResumenPerdidas, StockLoss } from '../../../shared/models/stock-loss.model';
 import { User } from '../../../shared/models/user.model';
 import { Product } from '../../../shared/models/product.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { RangoFechas } from '../../../shared/components/date-range-filter/date-range-filter.component';
 import { DeliveryFormDialogComponent } from './delivery-form-dialog/delivery-form-dialog.component';
 import { ReturnFormDialogComponent } from './return-form-dialog/return-form-dialog.component';
+import { LossFormDialogComponent } from './loss-form-dialog/loss-form-dialog.component';
 
 @Component({
   selector: 'app-deliveries',
@@ -39,9 +42,17 @@ export class DeliveriesComponent implements OnInit {
   totalDev = 0;
   paginaDev = 1;
 
+  perdidas: StockLoss[] = [];
+  resumenPerdidas: ResumenPerdidas | null = null;
+  cargandoPer = true;
+  totalPer = 0;
+  paginaPer = 1;
+  columnasPer = ['fecha', 'origen', 'producto', 'cantidad', 'valor', 'asumeSocio', 'notas', 'acciones'];
+
   constructor(
     private deliveryService: DeliveryService,
     private returnService: StockReturnService,
+    private lossService: StockLossService,
     private userService: UserService,
     private productService: ProductService,
     private dialog: MatDialog,
@@ -53,6 +64,7 @@ export class DeliveriesComponent implements OnInit {
     this.productService.getAll(1, 100).subscribe((res) => (this.productos = res.data.filter((p) => p.active)));
     this.cargarEntregas();
     this.cargarDevoluciones();
+    this.cargarPerdidas();
   }
 
   private get filtros() {
@@ -71,6 +83,12 @@ export class DeliveriesComponent implements OnInit {
     this.cargarDevoluciones();
   }
 
+  onPagePerChange(event: PageEvent): void {
+    this.paginaPer = event.pageIndex + 1;
+    this.pageSize = event.pageSize;
+    this.cargarPerdidas();
+  }
+
   onRangoChange(rango: RangoFechas): void {
     this.rango = rango;
     this.filtrar();
@@ -79,8 +97,10 @@ export class DeliveriesComponent implements OnInit {
   filtrar(): void {
     this.currentPage = 1;
     this.paginaDev = 1;
+    this.paginaPer = 1;
     this.cargarEntregas();
     this.cargarDevoluciones();
+    this.cargarPerdidas();
   }
 
   cargarEntregas(): void {
@@ -110,6 +130,56 @@ export class DeliveriesComponent implements OnInit {
         this.snackBar.open('Error al cargar devoluciones', 'Cerrar', { duration: 3000 });
         this.cargandoDev = false;
       },
+    });
+  }
+
+  cargarPerdidas(): void {
+    this.cargandoPer = true;
+    this.lossService.getAll(this.filtros, this.paginaPer, this.pageSize).subscribe({
+      next: (res) => {
+        this.perdidas = res.data;
+        this.totalPer = res.total ?? 0;
+        this.resumenPerdidas = res.resumen ?? null;
+        this.cargandoPer = false;
+      },
+      error: () => {
+        this.snackBar.open('Error al cargar pérdidas', 'Cerrar', { duration: 3000 });
+        this.cargandoPer = false;
+      },
+    });
+  }
+
+  abrirPerdida(): void {
+    const dialogRef = this.dialog.open(LossFormDialogComponent, {
+      width: '480px',
+      data: { socios: this.socios, productos: this.productos },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((resultado) => {
+      if (resultado) this.cargarPerdidas();
+    });
+  }
+
+  confirmarEliminarPerdida(perdida: StockLoss): void {
+    const donde = perdida.partner ? `al inventario de ${perdida.partner.name}` : 'a la bodega';
+    const cargo = perdida.cargoSocio > 0 ? ' y se anula el descuento de su comisión' : '';
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: { titulo: 'Eliminar pérdida', mensaje: `Las ${perdida.quantity} unidades vuelven ${donde}${cargo}.` },
+    });
+
+    dialogRef.afterClosed().subscribe((confirmado) => {
+      if (confirmado) {
+        this.lossService.remove(perdida.id).subscribe({
+          next: () => {
+            this.snackBar.open('Pérdida eliminada', 'Cerrar', { duration: 3000 });
+            this.cargarPerdidas();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.error || 'Error al eliminar pérdida', 'Cerrar', { duration: 5000 });
+          },
+        });
+      }
     });
   }
 

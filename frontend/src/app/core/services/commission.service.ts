@@ -19,7 +19,7 @@ export class CommissionService {
     return this.http.post<ApiResponse<CommissionPayment>>(this.apiUrl, data);
   }
 
-  getPending(partnerId: string): Observable<ApiResponse<{ pendiente: number; generada: number; pagada: number }>> {
+  getPending(partnerId: string): Observable<ApiResponse<{ pendiente: number; generada: number; pagada: number; cargosPerdidas: number }>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/pending/${partnerId}`);
   }
 

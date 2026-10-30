@@ -2,6 +2,10 @@
   <div class="page-header">
     <h1><mat-icon>local_shipping</mat-icon> Entregas</h1>
     <div class="acciones-header">
+      <button mat-stroked-button color="warn" (click)="abrirPerdida()">
+        <mat-icon>heart_broken</mat-icon>
+        Registrar pérdida
+      </button>
       <button mat-stroked-button (click)="abrirDevolucion()">
         <mat-icon>assignment_return</mat-icon>
         Registrar devolución
@@ -158,6 +162,88 @@
             </mat-paginator>
 
             <p *ngIf="devoluciones.length === 0" class="empty-state">No hay devoluciones registradas</p>
+          </div>
+        </mat-tab>
+
+        <!-- ── Pérdidas ── -->
+        <mat-tab label="Pérdidas ({{ totalPer }})">
+          <p class="tab-ayuda">
+            Botellas quebradas o perdidas, en bodega o en poder de un socio. Se valoran al costo; la parte que asume el
+            socio se descuenta de su comisión.
+          </p>
+
+          <div *ngIf="resumenPerdidas && resumenPerdidas.unidades > 0" class="resumen-perdidas">
+            <span><strong>{{ resumenPerdidas.unidades }}</strong> botellas · <strong>{{ resumenPerdidas.valor | copCurrency }}</strong></span>
+            <span>Negocio: {{ resumenPerdidas.asumidoNegocio | copCurrency }}</span>
+            <span>Socios: {{ resumenPerdidas.asumidoSocios | copCurrency }}</span>
+          </div>
+
+          <app-skeleton-table *ngIf="cargandoPer" [rows]="4" [columns]="8"></app-skeleton-table>
+
+          <div *ngIf="!cargandoPer" class="table-container">
+            <table mat-table [dataSource]="perdidas">
+              <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                <td mat-cell *matCellDef="let row">{{ row.date | date:'dd/MM/yyyy':'UTC' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="origen">
+                <th mat-header-cell *matHeaderCellDef>Dónde</th>
+                <td mat-cell *matCellDef="let row">{{ row.partner?.name || 'Bodega' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="producto">
+                <th mat-header-cell *matHeaderCellDef>Producto</th>
+                <td mat-cell *matCellDef="let row">{{ row.product?.name }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="cantidad">
+                <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+                <td mat-cell *matCellDef="let row"><strong>{{ row.quantity }}</strong></td>
+              </ng-container>
+
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef>Valor</th>
+                <td mat-cell *matCellDef="let row">{{ row.valor | copCurrency }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="asumeSocio">
+                <th mat-header-cell *matHeaderCellDef>Asume socio</th>
+                <td mat-cell *matCellDef="let row">
+                  <span *ngIf="row.partnerId">{{ row.cargoSocio | copCurrency }} ({{ row.partnerSharePct }}%)</span>
+                  <span *ngIf="!row.partnerId" class="text-muted">—</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="notas">
+                <th mat-header-cell *matHeaderCellDef>Notas</th>
+                <td mat-cell *matCellDef="let row">{{ row.notes || '-' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let row">
+                  <button mat-icon-button color="warn" (click)="confirmarEliminarPerdida(row)" matTooltip="Eliminar">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="columnasPer"></tr>
+              <tr mat-row *matRowDef="let row; columns: columnasPer"></tr>
+            </table>
+
+            <mat-paginator
+              *ngIf="totalPer > pageSize"
+              [length]="totalPer"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[10, 20, 50]"
+              [pageIndex]="paginaPer - 1"
+              (page)="onPagePerChange($event)"
+              showFirstLastButtons>
+            </mat-paginator>
+
+            <p *ngIf="perdidas.length === 0" class="empty-state">No hay pérdidas registradas</p>
           </div>
         </mat-tab>
 

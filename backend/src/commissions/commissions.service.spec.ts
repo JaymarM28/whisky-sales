@@ -16,12 +16,12 @@ describe('CommissionsService', () => {
   describe('getPendingForPartner', () => {
     it('calcula comisión con el precio de cada tipo de cliente', async () => {
       const { data } = await service.getPendingForPartner('p1', T);
-      expect(data).toEqual({ generada: 90_000, pagada: 50_000, pendiente: 40_000 });
+      expect(data).toEqual({ generada: 90_000, pagada: 50_000, cargosPerdidas: 0, pendiente: 40_000 });
     });
 
     it('solo cuenta ventas confirmadas', async () => {
       const { data } = await service.getPendingForPartner('p2', T);
-      expect(data).toEqual({ generada: 16_000, pagada: 0, pendiente: 16_000 });
+      expect(data).toEqual({ generada: 16_000, pagada: 0, cargosPerdidas: 0, pendiente: 16_000 });
     });
 
     it('no encuentra socios de otro negocio', async () => {

@@ -19,6 +19,7 @@ model Tenant {
   products           Product[]
   purchases          Purchase[]
   returns            StockReturn[]
+  losses             StockLoss[]
   sales              Sale[]
   users              User[]
   transfers          Transfer[]
@@ -42,6 +43,7 @@ model User {
   commissionPayments CommissionPayment[]
   deliveries         Delivery[]
   returns            StockReturn[]
+  losses             StockLoss[]
   sales              Sale[]
   tenant             Tenant?             @relation(fields: [tenantId], references: [id])
   transfersFrom      Transfer[]          @relation("TransferFrom")
@@ -66,6 +68,7 @@ model Product {
   deliveries     Delivery[]
   purchases      Purchase[]
   returns        StockReturn[]
+  losses         StockLoss[]
   tenant        Tenant?    @relation(fields: [tenantId], references: [id])
   sales         Sale[]
   transfers     Transfer[]
@@ -119,6 +122,27 @@ model StockReturn {
   tenant    Tenant?  @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, partnerId, productId])
+}
+
+/// Pérdida de inventario (botellas quebradas, etc.), desde la bodega (partnerId null) o desde un socio
+model StockLoss {
+  id              String   @id @default(cuid())
+  tenantId        String?
+  productId       String
+  partnerId       String?
+  quantity        Int
+  unitCost        Int
+  /// Porcentaje del costo que asume el socio (se descuenta de su comisión); el resto lo asume el negocio
+  partnerSharePct Int      @default(0)
+  date            DateTime
+  notes           String?
+  createdAt       DateTime @default(now())
+  product         Product  @relation(fields: [productId], references: [id])
+  partner         User?    @relation(fields: [partnerId], references: [id])
+  tenant          Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, productId])
+  @@index([tenantId, partnerId])
 }
 
 model Sale {

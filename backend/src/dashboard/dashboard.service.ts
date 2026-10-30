@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { precioVentaUnitario, esVentaNegocio } from '../common/utils/sale-price';
+import { cargosPorSocio, valorPerdida, cargoAlSocio } from '../common/utils/loss-charges';
 
 @Injectable()
 export class DashboardService {
@@ -19,7 +20,7 @@ export class DashboardService {
   }
 
   async getOwnerDashboard(tenantId: string) {
-    const [ventasPendientes, ventasConfirmadas, partners, products, pagos, compras, entregado, devuelto, movimientos] =
+    const [ventasPendientes, ventasConfirmadas, partners, products, pagos, compras, entregado, devuelto, movimientos, perdidas] =
       await Promise.all([
         this.prisma.sale.count({ where: { tenantId, status: 'PENDING' } }),
         this.prisma.sale.findMany({
@@ -36,6 +37,7 @@ export class DashboardService {
         this.prisma.delivery.aggregate({ where: { tenantId }, _sum: { quantity: true } }),
         this.prisma.stockReturn.aggregate({ where: { tenantId }, _sum: { quantity: true } }),
         this.inventory.getMovimientosNegocio(tenantId),
+        this.prisma.stockLoss.findMany({ where: { tenantId } }),
       ]);
 
     const gananciaBruta = ventasConfirmadas.reduce((acc, sale) => {
@@ -51,6 +53,8 @@ export class DashboardService {
     // Comisiones de socios activos: generada por sus ventas confirmadas, pagada según sus pagos
     let comisionesTotalGeneradas = 0;
     let comisionesTotalPagadas = 0;
+    let cargosSociosActivos = 0;
+    const cargos = cargosPorSocio(perdidas);
     for (const partner of partners) {
       comisionesTotalGeneradas += ventasConfirmadas
         .filter((sale) => sale.partnerId === partner.id)
@@ -60,10 +64,18 @@ export class DashboardService {
           return acc + margenSocio * (partner.commissionPct / 100);
         }, 0);
       comisionesTotalPagadas += pagos.find((p) => p.partnerId === partner.id)?._sum.amount || 0;
+      cargosSociosActivos += cargos.get(partner.id) ?? 0;
     }
 
-    const comisionesPendientes = comisionesTotalGeneradas - comisionesTotalPagadas;
-    const gananciaNeta = gananciaBruta - comisionesTotalPagadas;
+    // Pérdidas al costo: la parte del socio se recupera pagándole menos comisión,
+    // así que la ganancia neta resta el valor completo y las comisiones pagadas reflejan el descuento.
+    const valorPerdidas = perdidas.reduce((acc, p) => acc + valorPerdida(p), 0);
+    const asumidoSocios = perdidas.reduce((acc, p) => acc + cargoAlSocio(p), 0);
+    const perdidasBodega = perdidas.filter((p) => !p.partnerId).reduce((acc, p) => acc + p.quantity, 0);
+    const perdidasSocios = perdidas.filter((p) => p.partnerId).reduce((acc, p) => acc + p.quantity, 0);
+
+    const comisionesPendientes = comisionesTotalGeneradas - comisionesTotalPagadas - cargosSociosActivos;
+    const gananciaNeta = gananciaBruta - comisionesTotalPagadas - valorPerdidas;
 
     const totalEntregado = entregado._sum.quantity || 0;
     const totalVendido = ventasConfirmadas.reduce((acc, s) => acc + s.quantity, 0);
@@ -102,11 +114,18 @@ export class DashboardService {
         inventarioGlobal: {
           totalComprado,
           totalInvertido: compras._sum.totalCost || 0,
-          enBodega: totalComprado - totalEntregado + totalDevuelto,
+          enBodega: totalComprado - totalEntregado + totalDevuelto - perdidasBodega,
           totalEntregado,
           totalVendido,
           totalDevuelto,
-          disponible: totalEntregado - totalVendido - totalDevuelto,
+          totalPerdido: perdidasBodega + perdidasSocios,
+          disponible: totalEntregado - totalVendido - totalDevuelto - perdidasSocios,
+        },
+        perdidas: {
+          unidades: perdidasBodega + perdidasSocios,
+          valor: valorPerdidas,
+          asumidoSocios,
+          asumidoNegocio: valorPerdidas - asumidoSocios,
         },
         inventarioPorSocio,
       },
@@ -116,7 +135,7 @@ export class DashboardService {
   }
 
   async getPartnerDashboard(partnerId: string, tenantId: string) {
-    const [partner, products, movimientos, ventasConfirmadas, ultimasVentas, ventasPendientesCount, totalEntregado, devueltoSocio] =
+    const [partner, products, movimientos, ventasConfirmadas, ultimasVentas, ventasPendientesCount, totalEntregado, devueltoSocio, perdidas] =
       await Promise.all([
         this.prisma.user.findFirst({ where: { id: partnerId, tenantId }, select: { commissionPct: true, name: true } }),
         this.prisma.product.findMany({ where: { tenantId, active: true }, select: { id: true, name: true } }),
@@ -136,6 +155,7 @@ export class DashboardService {
         this.prisma.sale.count({ where: { tenantId, partnerId, status: 'PENDING' } }),
         this.prisma.delivery.aggregate({ where: { tenantId, partnerId }, _sum: { quantity: true } }),
         this.prisma.stockReturn.aggregate({ where: { tenantId, partnerId }, _sum: { quantity: true } }),
+        this.prisma.stockLoss.findMany({ where: { tenantId, partnerId } }),
       ]);
 
     // Inventario disponible por producto (incluye traspasos y devoluciones)
@@ -169,7 +189,8 @@ export class DashboardService {
       where: { tenantId, partnerId },
       _sum: { amount: true },
     });
-    const comisionPendiente = comisionGenerada - (pagado._sum.amount || 0);
+    const cargosPerdidas = cargosPorSocio(perdidas).get(partnerId) ?? 0;
+    const comisionPendiente = comisionGenerada - (pagado._sum.amount || 0) - cargosPerdidas;
 
     return {
       data: {
@@ -177,6 +198,7 @@ export class DashboardService {
         comisionGenerada: Math.round(comisionGenerada),
         comisionPagada: pagado._sum.amount || 0,
         comisionPendiente: Math.round(comisionPendiente),
+        cargosPerdidas,
         // Actividad
         ventasPendientes: ventasPendientesCount,
         ventasConfirmadas: ventasConfirmadas.length,

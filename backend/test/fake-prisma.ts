@@ -18,10 +18,11 @@ export interface Datos {
   sale?: Row[];
   transfer?: Row[];
   stockReturn?: Row[];
+  stockLoss?: Row[];
   commissionPayment?: Row[];
 }
 
-const MODELOS = ['user', 'product', 'purchase', 'delivery', 'sale', 'transfer', 'stockReturn', 'commissionPayment'] as const;
+const MODELOS = ['user', 'product', 'purchase', 'delivery', 'sale', 'transfer', 'stockReturn', 'stockLoss', 'commissionPayment'] as const;
 
 function cumple(row: Row, where: Row = {}): boolean {
   return Object.entries(where).every(([campo, cond]) => {
@@ -121,6 +122,11 @@ export function crearFakePrisma(datos: Datos) {
         const row = filtrar(where)[0];
         Object.assign(row, data);
         return conRelaciones(row);
+      },
+      deleteMany: async ({ where }: Row) => {
+        const borrar = filtrar(where);
+        tablas[modelo] = tablas[modelo].filter((r) => !borrar.includes(r));
+        return { count: borrar.length };
       },
       delete: async ({ where }: Row) => {
         const row = filtrar(where)[0];

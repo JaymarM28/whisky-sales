@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateCommissionDto } from './dto/create-commission.dto';
 import { precioVentaUnitario } from '../common/utils/sale-price';
+import { cargosPorSocio } from '../common/utils/loss-charges';
 
 @Injectable()
 export class CommissionsService {
@@ -75,16 +76,18 @@ export class CommissionsService {
       return acc + margenSocio * (partner.commissionPct / 100);
     }, 0);
 
-    const pagado = await this.prisma.commissionPayment.aggregate({
-      where: { tenantId, partnerId },
-      _sum: { amount: true },
-    });
+    const [pagado, perdidas] = await Promise.all([
+      this.prisma.commissionPayment.aggregate({ where: { tenantId, partnerId }, _sum: { amount: true } }),
+      this.prisma.stockLoss.findMany({ where: { tenantId, partnerId } }),
+    ]);
 
     const pagada = pagado._sum.amount || 0;
-    const pendiente = Math.round(generada - pagada);
+    // Parte de las pérdidas (botellas quebradas) que asume el socio
+    const cargosPerdidas = cargosPorSocio(perdidas).get(partnerId) ?? 0;
+    const pendiente = Math.round(generada - pagada - cargosPerdidas);
 
     return {
-      data: { pendiente, generada: Math.round(generada), pagada },
+      data: { pendiente, generada: Math.round(generada), pagada, cargosPerdidas },
       error: null,
       message: null,
     };

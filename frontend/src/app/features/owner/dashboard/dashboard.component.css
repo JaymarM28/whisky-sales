@@ -206,3 +206,6 @@ mat-card-header mat-card-title {
     width: 100%;
   }
 }
+
+.bg-red        { background: #b91c1c; }
+.text-red      { color: #b91c1c; }

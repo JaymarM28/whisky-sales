@@ -29,6 +29,10 @@
         <span class="pending-label">Ya pagada</span>
         <span class="pending-value negative">- {{ pendienteInfo.pagada | number:'1.0-0' }} COP</span>
       </div>
+      <div *ngIf="pendienteInfo.cargosPerdidas > 0" class="pending-row">
+        <span class="pending-label">Descuento por pérdidas</span>
+        <span class="pending-value negative">- {{ pendienteInfo.cargosPerdidas | number:'1.0-0' }} COP</span>
+      </div>
       <div class="pending-row total">
         <span class="pending-label">Pendiente</span>
         <span class="pending-value highlight">{{ pendienteInfo.pendiente | number:'1.0-0' }} COP</span>

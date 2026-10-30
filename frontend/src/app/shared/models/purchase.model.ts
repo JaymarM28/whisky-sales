@@ -17,10 +17,11 @@ export interface ProductStock {
   totalInvertido: number;
   totalEntregado: number;
   totalDevuelto: number;
+  totalPerdido: number;
   enBodega: number;
 }
 
 export interface StockResumen {
   productos: ProductStock[];
-  totales: { totalComprado: number; totalInvertido: number; totalEntregado: number; totalDevuelto: number; enBodega: number };
+  totales: { totalComprado: number; totalInvertido: number; totalEntregado: number; totalDevuelto: number; totalPerdido: number; enBodega: number };
 }

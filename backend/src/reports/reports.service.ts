@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { precioVentaUnitario, esVentaNegocio } from '../common/utils/sale-price';
+import { cargosPorSocio } from '../common/utils/loss-charges';
 
 @Injectable()
 export class ReportsService {
@@ -166,7 +167,7 @@ export class ReportsService {
 
   async getSocios(tenantId: string) {
     const porSocio = { by: ['partnerId'] as ('partnerId')[], _sum: { quantity: true as const } };
-    const [partners, entregas, confirmadas, pendientes, salidas, entradas, devoluciones, pagos, ventasConf] = await Promise.all([
+    const [partners, entregas, confirmadas, pendientes, salidas, entradas, devoluciones, pagos, ventasConf, perdidas] = await Promise.all([
       this.prisma.user.findMany({ where: { tenantId, role: 'PARTNER' }, orderBy: { name: 'asc' } }),
       this.prisma.delivery.groupBy({ ...porSocio, where: { tenantId } }),
       this.prisma.sale.groupBy({ ...porSocio, where: { tenantId, status: 'CONFIRMED' } }),
@@ -179,7 +180,9 @@ export class ReportsService {
         where: { tenantId, status: 'CONFIRMED' },
         include: { product: { select: { partnerPrice: true, salePrice: true } } },
       }),
+      this.prisma.stockLoss.findMany({ where: { tenantId, partnerId: { not: null } } }),
     ]);
+    const cargos = cargosPorSocio(perdidas);
 
     const cantidad = (grupos: { partnerId: string; _sum: { quantity: number | null } }[], id: string) =>
       grupos.find((g) => g.partnerId === id)?._sum.quantity || 0;
@@ -201,7 +204,9 @@ export class ReportsService {
       const totalDevuelto = cantidad(devoluciones, partner.id);
       const trOut = salidas.find((g) => g.fromPartnerId === partner.id)?._sum.quantity || 0;
       const trIn = entradas.find((g) => g.toPartnerId === partner.id)?._sum.quantity || 0;
-      const disponible = totalEntregado - totalVendido - totalPendiente - trOut + trIn - totalDevuelto;
+      const totalPerdido = perdidas.filter((p) => p.partnerId === partner.id).reduce((s, p) => s + p.quantity, 0);
+      const cargosPerdidas = cargos.get(partner.id) ?? 0;
+      const disponible = totalEntregado - totalVendido - totalPendiente - trOut + trIn - totalDevuelto - totalPerdido;
       const entregadoNeto = totalEntregado - totalDevuelto;
       const rendimientoPct = entregadoNeto > 0 ? (totalVendido / entregadoNeto) * 100 : 0;
 
@@ -214,11 +219,13 @@ export class ReportsService {
         totalVendido,
         totalPendiente,
         totalDevuelto,
+        totalPerdido,
         disponible,
         rendimientoPct: Math.round(rendimientoPct * 10) / 10,
         comisionGenerada: Math.round(comisionGenerada),
         comisionPagada,
-        comisionPendiente: Math.round(comisionGenerada) - comisionPagada,
+        cargosPerdidas,
+        comisionPendiente: Math.round(comisionGenerada) - comisionPagada - cargosPerdidas,
       };
     });
 
@@ -227,7 +234,7 @@ export class ReportsService {
 
   async getInventarioPorSocio(tenantId: string) {
     const porFecha = { orderBy: { date: 'asc' as const } };
-    const [partners, products, entregas, ventas, traspasos, devoluciones] = await Promise.all([
+    const [partners, products, entregas, ventas, traspasos, devoluciones, perdidas] = await Promise.all([
       this.prisma.user.findMany({
         where: { tenantId, role: 'PARTNER' },
         orderBy: { name: 'asc' },
@@ -245,6 +252,7 @@ export class ReportsService {
         include: { fromPartner: { select: { name: true } }, toPartner: { select: { name: true } } },
       }),
       this.prisma.stockReturn.findMany({ where: { tenantId }, ...porFecha }),
+      this.prisma.stockLoss.findMany({ where: { tenantId, partnerId: { not: null } }, ...porFecha }),
     ]);
 
     const suma = (rows: { quantity: number }[]) => rows.reduce((s, r) => s + r.quantity, 0);
@@ -259,6 +267,7 @@ export class ReportsService {
         const traspasosOut = delProducto(traspasos).filter((t) => t.fromPartnerId === partner.id);
         const traspasosIn = delProducto(traspasos).filter((t) => t.toPartnerId === partner.id);
         const dev = delProducto(devoluciones).filter((d) => d.partnerId === partner.id);
+        const per = delProducto(perdidas).filter((p) => p.partnerId === partner.id);
 
         const totalEntregas    = suma(ent);
         const totalVentasConf  = suma(ventasConf);
@@ -266,7 +275,8 @@ export class ReportsService {
         const totalTrOut       = suma(traspasosOut);
         const totalTrIn        = suma(traspasosIn);
         const totalDevuelto    = suma(dev);
-        const disponible       = totalEntregas - totalVentasConf - totalVentasPend - totalTrOut + totalTrIn - totalDevuelto;
+        const totalPerdido     = suma(per);
+        const disponible       = totalEntregas - totalVentasConf - totalVentasPend - totalTrOut + totalTrIn - totalDevuelto - totalPerdido;
 
         if (totalEntregas === 0 && totalTrIn === 0) return null;
 
@@ -277,9 +287,10 @@ export class ReportsService {
           ...traspasosOut.map(t => ({ tipo: 'TRASPASO_SALIDA', fecha: t.date, cantidad: t.quantity, notas: t.notes, contraparte: t.toPartner.name })),
           ...traspasosIn.map(t => ({ tipo: 'TRASPASO_ENTRADA', fecha: t.date, cantidad: t.quantity, notas: t.notes, contraparte: t.fromPartner.name })),
           ...dev.map(d => ({ tipo: 'DEVOLUCION', fecha: d.date, cantidad: d.quantity, notas: d.notes, contraparte: null })),
+          ...per.map(p => ({ tipo: 'PERDIDA', fecha: p.date, cantidad: p.quantity, notas: p.notes, contraparte: null })),
         ].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
-        return { producto: product, totalEntregas, totalVentasConf, totalVentasPend, totalTrOut, totalTrIn, totalDevuelto, disponible, movimientos };
+        return { producto: product, totalEntregas, totalVentasConf, totalVentasPend, totalTrOut, totalTrIn, totalDevuelto, totalPerdido, disponible, movimientos };
       });
 
       const productos = productosConActividad.filter(Boolean) as any[];
@@ -291,6 +302,7 @@ export class ReportsService {
         traspasosOut: productos.reduce((s, p) => s + p.totalTrOut, 0),
         traspasosIn:  productos.reduce((s, p) => s + p.totalTrIn, 0),
         devoluciones: productos.reduce((s, p) => s + p.totalDevuelto, 0),
+        perdidas:     productos.reduce((s, p) => s + p.totalPerdido, 0),
         disponible:   productos.reduce((s, p) => s + p.disponible, 0),
       };
 
@@ -307,7 +319,7 @@ export class ReportsService {
     });
 
     const porProducto = { by: ['productId'] as ('productId')[] };
-    const [compras, entregas, ventas, devoluciones] = await Promise.all([
+    const [compras, entregas, ventas, devoluciones, perdidasBodega, perdidasSocios] = await Promise.all([
       this.prisma.purchase.groupBy({ ...porProducto, where: { tenantId }, _sum: { quantity: true, totalCost: true } }),
       this.prisma.delivery.groupBy({ ...porProducto, where: { tenantId }, _sum: { quantity: true } }),
       this.prisma.sale.groupBy({
@@ -316,6 +328,8 @@ export class ReportsService {
         _sum: { quantity: true },
       }),
       this.prisma.stockReturn.groupBy({ ...porProducto, where: { tenantId }, _sum: { quantity: true } }),
+      this.prisma.stockLoss.groupBy({ ...porProducto, where: { tenantId, partnerId: null }, _sum: { quantity: true } }),
+      this.prisma.stockLoss.groupBy({ ...porProducto, where: { tenantId, partnerId: { not: null } }, _sum: { quantity: true } }),
     ]);
     const delProducto = <G extends { productId: string }>(grupos: G[], id: string) => grupos.find((g) => g.productId === id);
 
@@ -324,14 +338,16 @@ export class ReportsService {
       const entregado = delProducto(entregas, p.id) ?? { _sum: { quantity: 0 } };
       const vendido = delProducto(ventas, p.id) ?? { _sum: { quantity: 0 } };
       const devuelto = delProducto(devoluciones, p.id) ?? { _sum: { quantity: 0 } };
+      const perdidoBodega = delProducto(perdidasBodega, p.id)?._sum.quantity || 0;
+      const perdidoSocios = delProducto(perdidasSocios, p.id)?._sum.quantity || 0;
 
       const totalComprado = comprado._sum.quantity || 0;
       const totalInvertido = comprado._sum.totalCost || 0;
       const totalEntregado = entregado._sum.quantity || 0;
       const totalVendido = vendido._sum.quantity || 0;
       const totalDevuelto = devuelto._sum.quantity || 0;
-      const enBodega = totalComprado - totalEntregado + totalDevuelto;
-      const enSocios = totalEntregado - totalVendido - totalDevuelto;
+      const enBodega = totalComprado - totalEntregado + totalDevuelto - perdidoBodega;
+      const enSocios = totalEntregado - totalVendido - totalDevuelto - perdidoSocios;
       const disponible = enBodega + enSocios;
       const rotacionPct = totalComprado > 0 ? (totalVendido / totalComprado) * 100 : 0;
       const inversionDisponible = disponible * p.costPrice;
@@ -349,6 +365,7 @@ export class ReportsService {
         totalInvertido,
         totalEntregado,
         totalVendido,
+        totalPerdido: perdidoBodega + perdidoSocios,
         enBodega,
         enSocios,
         disponible,

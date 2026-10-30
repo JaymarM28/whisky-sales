@@ -62,18 +62,24 @@ export class PurchasesService {
     return { data: null, error: null, message: 'Compra eliminada exitosamente' };
   }
 
-  /** Unidades en bodega del dueño = comprado − entregado a socios + devuelto por socios. */
+  /** Unidades en bodega del dueño = comprado − entregado a socios + devuelto por socios − perdido en bodega. */
   async getStockBodega(productId: string, tenantId: string): Promise<number> {
-    const [comprado, entregado, devuelto] = await Promise.all([
+    const [comprado, entregado, devuelto, perdido] = await Promise.all([
       this.prisma.purchase.aggregate({ where: { tenantId, productId }, _sum: { quantity: true } }),
       this.prisma.delivery.aggregate({ where: { tenantId, productId }, _sum: { quantity: true } }),
       this.prisma.stockReturn.aggregate({ where: { tenantId, productId }, _sum: { quantity: true } }),
+      this.prisma.stockLoss.aggregate({ where: { tenantId, productId, partnerId: null }, _sum: { quantity: true } }),
     ]);
-    return (comprado._sum.quantity || 0) - (entregado._sum.quantity || 0) + (devuelto._sum.quantity || 0);
+    return (
+      (comprado._sum.quantity || 0) -
+      (entregado._sum.quantity || 0) +
+      (devuelto._sum.quantity || 0) -
+      (perdido._sum.quantity || 0)
+    );
   }
 
   async getStock(tenantId: string) {
-    const [products, compras, entregas, devoluciones] = await Promise.all([
+    const [products, compras, entregas, devoluciones, perdidas] = await Promise.all([
       this.prisma.product.findMany({
         where: { tenantId, active: true },
         select: { id: true, name: true, reference: true, unitsPerBox: true, costPrice: true },
@@ -94,22 +100,30 @@ export class PurchasesService {
         where: { tenantId },
         _sum: { quantity: true },
       }),
+      this.prisma.stockLoss.groupBy({
+        by: ['productId'],
+        where: { tenantId, partnerId: null },
+        _sum: { quantity: true },
+      }),
     ]);
 
     const data = products.map((product) => {
       const c = compras.find((x) => x.productId === product.id);
       const e = entregas.find((x) => x.productId === product.id);
       const d = devoluciones.find((x) => x.productId === product.id);
+      const pe = perdidas.find((x) => x.productId === product.id);
       const totalComprado = c?._sum.quantity || 0;
       const totalEntregado = e?._sum.quantity || 0;
       const totalDevuelto = d?._sum.quantity || 0;
+      const totalPerdido = pe?._sum.quantity || 0;
       return {
         product,
         totalComprado,
         totalInvertido: c?._sum.totalCost || 0,
         totalEntregado,
         totalDevuelto,
-        enBodega: totalComprado - totalEntregado + totalDevuelto,
+        totalPerdido,
+        enBodega: totalComprado - totalEntregado + totalDevuelto - totalPerdido,
       };
     });
 
@@ -118,6 +132,7 @@ export class PurchasesService {
       totalInvertido: data.reduce((acc, d) => acc + d.totalInvertido, 0),
       totalEntregado: data.reduce((acc, d) => acc + d.totalEntregado, 0),
       totalDevuelto: data.reduce((acc, d) => acc + d.totalDevuelto, 0),
+      totalPerdido: data.reduce((acc, d) => acc + d.totalPerdido, 0),
       enBodega: data.reduce((acc, d) => acc + d.enBodega, 0),
     };
 

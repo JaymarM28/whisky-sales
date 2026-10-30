@@ -1,0 +1,90 @@
+<h2 mat-dialog-title>
+  <mat-icon>heart_broken</mat-icon>
+  Registrar pérdida
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="ayuda">Botellas quebradas o perdidas. Se descuentan del inventario y se valoran al costo actual del producto.</p>
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>¿Dónde estaba?</mat-label>
+      <mat-select formControlName="origen" (selectionChange)="onOrigenChange()">
+        <mat-option value="bodega">En mi bodega</mat-option>
+        <mat-option value="socio">En poder de un socio</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field *ngIf="enSocio" appearance="outline" class="full-width">
+      <mat-label>Socio</mat-label>
+      <mat-select formControlName="partnerId" (selectionChange)="onSocioChange()">
+        <mat-option *ngFor="let socio of data.socios" [value]="socio.id">{{ socio.name }}</mat-option>
+      </mat-select>
+      <mat-error>Selecciona un socio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Producto</mat-label>
+      <mat-select formControlName="productId">
+        <mat-option *ngFor="let d of disponibles" [value]="d.id">{{ d.name }} ({{ d.cantidad }} disponibles)</mat-option>
+      </mat-select>
+      <mat-hint *ngIf="cargando">Cargando inventario…</mat-hint>
+      <mat-hint *ngIf="!cargando && disponibles.length === 0 && (!enSocio || form.value.partnerId)" class="hint-error">
+        No hay unidades disponibles {{ enSocio ? 'con este socio' : 'en bodega' }}
+      </mat-hint>
+      <mat-error>Selecciona un producto</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Cantidad</mat-label>
+      <input matInput type="number" formControlName="quantity" min="1" />
+      <mat-hint *ngIf="disponible !== null" [class.hint-error]="excede">
+        Hay {{ disponible }}{{ excede ? ' — no puedes registrar más' : '' }}
+      </mat-hint>
+      <mat-error>La cantidad debe ser mayor a 0</mat-error>
+    </mat-form-field>
+
+    <ng-container *ngIf="enSocio">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>¿Quién asume la pérdida?</mat-label>
+        <mat-select formControlName="asume">
+          <mat-option *ngFor="let o of opcionesAsume" [value]="o.valor">{{ o.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field *ngIf="form.value.asume === -1" appearance="outline" class="full-width">
+        <mat-label>% que asume el socio</mat-label>
+        <input matInput type="number" formControlName="pctPersonalizado" min="0" max="100" />
+        <span matTextSuffix>%</span>
+        <mat-error>Entre 0 y 100</mat-error>
+      </mat-form-field>
+    </ng-container>
+
+    <div *ngIf="valor > 0" class="resumen">
+      <div class="fila"><span>Valor de la pérdida (al costo)</span><strong>{{ valor | copCurrency }}</strong></div>
+      <ng-container *ngIf="enSocio">
+        <div class="fila"><span>Asume el socio ({{ pctSocio }}%)</span><strong>{{ cargoSocio | copCurrency }}</strong></div>
+        <div class="fila"><span>Asume el negocio</span><strong>{{ valor - cargoSocio | copCurrency }}</strong></div>
+        <p *ngIf="cargoSocio > 0" class="nota">La parte del socio se descontará de su comisión pendiente.</p>
+      </ng-container>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha</mat-label>
+      <input matInput type="date" formControlName="date" />
+      <mat-error>La fecha es obligatoria</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notas (opcional)</mat-label>
+      <textarea matInput formControlName="notes" rows="2" placeholder="Ej: se quebró en el transporte"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-raised-button color="warn" (click)="guardar()" [disabled]="form.invalid || excede || guardando">
+    {{ guardando ? 'Guardando...' : 'Registrar pérdida' }}
+  </button>
+</mat-dialog-actions>

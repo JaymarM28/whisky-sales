@@ -49,6 +49,9 @@
             <span class="comision-sub">
               Generada: {{ resumen.comisionGenerada | copCurrency }} —
               Pagada: {{ resumen.comisionPagada | copCurrency }}
+              <ng-container *ngIf="resumen.cargosPerdidas > 0">
+                — Descuento por pérdidas: {{ resumen.cargosPerdidas | copCurrency }}
+              </ng-container>
             </span>
           </div>
         </mat-card-content>

@@ -1,0 +1,39 @@
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+mat-form-field {
+  margin-bottom: 8px;
+}
+
+.ayuda {
+  font-size: 13px;
+  color: rgba(0, 0, 0, .55);
+  margin: 0 0 16px;
+}
+
+.hint-error {
+  color: #dc2626;
+}
+
+.resumen {
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+
+.fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+
+.nota {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #991b1b;
+}

@@ -42,6 +42,7 @@ describe('DashboardService', () => {
         totalEntregado: 23,
         totalVendido: 11,
         totalDevuelto: 1,
+        totalPerdido: 0,
         disponible: 11,
       });
     });

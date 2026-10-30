@@ -14,7 +14,7 @@ export class CommissionPayDialogComponent implements OnInit {
   form: FormGroup;
   guardando = false;
   cargandoPendiente = false;
-  pendienteInfo: { pendiente: number; generada: number; pagada: number } | null = null;
+  pendienteInfo: { pendiente: number; generada: number; pagada: number; cargosPerdidas: number } | null = null;
 
   constructor(
     private fb: FormBuilder,

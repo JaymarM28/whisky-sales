@@ -46,6 +46,7 @@ import { TransfersComponent } from './transfers/transfers.component';
 import { TransferFormDialogComponent } from './transfers/transfer-form-dialog/transfer-form-dialog.component';
 import { PurchasesComponent } from './purchases/purchases.component';
 import { ReturnFormDialogComponent } from './deliveries/return-form-dialog/return-form-dialog.component';
+import { LossFormDialogComponent } from './deliveries/loss-form-dialog/loss-form-dialog.component';
 import { PurchaseFormDialogComponent } from './purchases/purchase-form-dialog/purchase-form-dialog.component';
 
 @NgModule({
@@ -73,6 +74,7 @@ import { PurchaseFormDialogComponent } from './purchases/purchase-form-dialog/pu
     PurchasesComponent,
     PurchaseFormDialogComponent,
     ReturnFormDialogComponent,
+    LossFormDialogComponent,
   ],
   imports: [
     CommonModule,

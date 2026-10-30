@@ -109,6 +109,19 @@
             </div>
           </div>
 
+          <ng-container *ngIf="resumen.perdidas?.valor > 0">
+            <div class="ganancia-operador">−</div>
+
+            <div class="ganancia-item">
+              <span class="ganancia-icon bg-red"><mat-icon>heart_broken</mat-icon></span>
+              <div>
+                <span class="ganancia-valor text-red">{{ resumen.perdidas.valor | copCurrency }}</span>
+                <span class="ganancia-etiqueta">Pérdidas</span>
+                <span class="ganancia-hint">{{ resumen.perdidas.unidades }} botellas al costo · socios asumen {{ resumen.perdidas.asumidoSocios | copCurrency }}</span>
+              </div>
+            </div>
+          </ng-container>
+
           <div class="ganancia-operador">=</div>
 
           <div class="ganancia-item ganancia-resultado">

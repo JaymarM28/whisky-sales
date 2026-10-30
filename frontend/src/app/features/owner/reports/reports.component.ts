@@ -113,6 +113,7 @@ export class ReportsComponent implements OnInit {
       TRASPASO_SALIDA: 'Traspaso salida',
       TRASPASO_ENTRADA: 'Traspaso entrada',
       DEVOLUCION: 'Devolución a bodega',
+      PERDIDA: 'Pérdida',
     };
     return map[tipo] ?? tipo;
   }
@@ -125,6 +126,7 @@ export class ReportsComponent implements OnInit {
       TRASPASO_SALIDA: 'chip-traspaso-out',
       TRASPASO_ENTRADA: 'chip-traspaso-in',
       DEVOLUCION: 'chip-devolucion',
+      PERDIDA: 'chip-rechazada',
     };
     return map[tipo] ?? '';
   }

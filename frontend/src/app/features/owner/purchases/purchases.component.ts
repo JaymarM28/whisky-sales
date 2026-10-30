@@ -24,7 +24,7 @@ export class PurchasesComponent implements OnInit {
   pageSize = 20;
   currentPage = 1;
   columnas = ['fecha', 'producto', 'cantidad', 'costoUnitario', 'total', 'proveedor', 'notas', 'acciones'];
-  columnasStock = ['producto', 'comprado', 'entregado', 'devuelto', 'enBodega', 'invertido'];
+  columnasStock = ['producto', 'comprado', 'entregado', 'devuelto', 'perdido', 'enBodega', 'invertido'];
   filtroProducto = '';
   rango: RangoFechas = {};
   resumen: { unidades: number; totalPagado: number } | null = null;

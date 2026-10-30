@@ -7,6 +7,7 @@ export interface MovimientosSocio {
   traspasoSalida: number;
   traspasoEntrada: number;
   devuelto: number;
+  perdido: number;
   disponible: number;
 }
 
@@ -16,10 +17,10 @@ export class InventoryService {
 
   /**
    * Movimientos de un socio para un producto.
-   * disponible = entregado − vendido (confirmadas + pendientes) − traspasado + recibido − devuelto a bodega.
+   * disponible = entregado − vendido (confirmadas + pendientes) − traspasado + recibido − devuelto a bodega − perdido.
    */
   async getMovimientos(partnerId: string, productId: string, tenantId: string): Promise<MovimientosSocio> {
-    const [entregado, vendido, transferOut, transferIn, devuelto] = await Promise.all([
+    const [entregado, vendido, transferOut, transferIn, devuelto, perdido] = await Promise.all([
       this.prisma.delivery.aggregate({ where: { tenantId, partnerId, productId }, _sum: { quantity: true } }),
       this.prisma.sale.aggregate({
         where: { tenantId, partnerId, productId, status: { in: ['CONFIRMED', 'PENDING'] } },
@@ -28,6 +29,7 @@ export class InventoryService {
       this.prisma.transfer.aggregate({ where: { tenantId, fromPartnerId: partnerId, productId }, _sum: { quantity: true } }),
       this.prisma.transfer.aggregate({ where: { tenantId, toPartnerId: partnerId, productId }, _sum: { quantity: true } }),
       this.prisma.stockReturn.aggregate({ where: { tenantId, partnerId, productId }, _sum: { quantity: true } }),
+      this.prisma.stockLoss.aggregate({ where: { tenantId, partnerId, productId }, _sum: { quantity: true } }),
     ]);
 
     const m = {
@@ -36,10 +38,11 @@ export class InventoryService {
       traspasoSalida: transferOut._sum.quantity || 0,
       traspasoEntrada: transferIn._sum.quantity || 0,
       devuelto: devuelto._sum.quantity || 0,
+      perdido: perdido._sum.quantity || 0,
     };
     return {
       ...m,
-      disponible: m.entregado - m.vendido - m.traspasoSalida + m.traspasoEntrada - m.devuelto,
+      disponible: m.entregado - m.vendido - m.traspasoSalida + m.traspasoEntrada - m.devuelto - m.perdido,
     };
   }
 
@@ -48,12 +51,12 @@ export class InventoryService {
   }
 
   /**
-   * Movimientos de todos los socios del negocio (o de uno) en 5 consultas agrupadas.
+   * Movimientos de todos los socios del negocio (o de uno) en 6 consultas agrupadas.
    * Devuelve un mapa por clave `socio|producto`; usar `movimientosDe` para leerlo.
    */
   async getMovimientosNegocio(tenantId: string, partnerId?: string): Promise<Map<string, MovimientosSocio>> {
     const porSocio = partnerId ? { partnerId } : {};
-    const [entregas, ventas, salidas, entradas, devoluciones] = await Promise.all([
+    const [entregas, ventas, salidas, entradas, devoluciones, perdidas] = await Promise.all([
       this.prisma.delivery.groupBy({ by: ['partnerId', 'productId'], where: { tenantId, ...porSocio }, _sum: { quantity: true } }),
       this.prisma.sale.groupBy({
         by: ['partnerId', 'productId'],
@@ -71,12 +74,18 @@ export class InventoryService {
         _sum: { quantity: true },
       }),
       this.prisma.stockReturn.groupBy({ by: ['partnerId', 'productId'], where: { tenantId, ...porSocio }, _sum: { quantity: true } }),
+      // Solo pérdidas en manos de socios; las de bodega no tienen partnerId
+      this.prisma.stockLoss.groupBy({
+        by: ['partnerId', 'productId'],
+        where: { tenantId, ...(partnerId ? { partnerId } : { partnerId: { not: null } }) },
+        _sum: { quantity: true },
+      }),
     ]);
 
     const mapa = new Map<string, MovimientosSocio>();
     const sumar = (socio: string, producto: string, campo: keyof MovimientosSocio, cantidad: number | null) => {
       const clave = `${socio}|${producto}`;
-      const m = mapa.get(clave) ?? { entregado: 0, vendido: 0, traspasoSalida: 0, traspasoEntrada: 0, devuelto: 0, disponible: 0 };
+      const m = mapa.get(clave) ?? { entregado: 0, vendido: 0, traspasoSalida: 0, traspasoEntrada: 0, devuelto: 0, perdido: 0, disponible: 0 };
       m[campo] += cantidad || 0;
       mapa.set(clave, m);
     };
@@ -85,15 +94,16 @@ export class InventoryService {
     salidas.forEach((g) => sumar(g.fromPartnerId, g.productId, 'traspasoSalida', g._sum.quantity));
     entradas.forEach((g) => sumar(g.toPartnerId, g.productId, 'traspasoEntrada', g._sum.quantity));
     devoluciones.forEach((g) => sumar(g.partnerId, g.productId, 'devuelto', g._sum.quantity));
+    perdidas.forEach((g) => sumar(g.partnerId!, g.productId, 'perdido', g._sum.quantity));
     for (const m of mapa.values()) {
-      m.disponible = m.entregado - m.vendido - m.traspasoSalida + m.traspasoEntrada - m.devuelto;
+      m.disponible = m.entregado - m.vendido - m.traspasoSalida + m.traspasoEntrada - m.devuelto - m.perdido;
     }
     return mapa;
   }
 
   /** Lee del mapa de getMovimientosNegocio; ceros si el socio no tiene movimientos del producto. */
   movimientosDe(mapa: Map<string, MovimientosSocio>, partnerId: string, productId: string): MovimientosSocio {
-    return mapa.get(`${partnerId}|${productId}`) ?? { entregado: 0, vendido: 0, traspasoSalida: 0, traspasoEntrada: 0, devuelto: 0, disponible: 0 };
+    return mapa.get(`${partnerId}|${productId}`) ?? { entregado: 0, vendido: 0, traspasoSalida: 0, traspasoEntrada: 0, devuelto: 0, perdido: 0, disponible: 0 };
   }
 
   async getAll(tenantId: string) {
@@ -141,6 +151,7 @@ export class InventoryService {
       totalDelivered: m.entregado,
       totalSold: m.vendido,
       totalReturned: m.devuelto,
+      totalLost: m.perdido,
       available: m.disponible,
     };
   }
